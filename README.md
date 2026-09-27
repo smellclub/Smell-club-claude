@@ -1,226 +1,226 @@
-# Smellclub · Online store
+# Smellclub · Tienda online
 
-A premium perfume store with a catalogue, decants, a cart, orders, stock and a private admin panel.
+Perfumería premium con catálogo, decants, carrito, pedidos, stock y panel privado de administración.
 
 **Stack:** Next.js 16 (App Router) · TypeScript strict · Tailwind CSS 4 · Supabase (PostgreSQL, Auth, Storage) · Vercel.
 
-> The site copy is in Spanish. Anything marked **[PLACEHOLDER]** in the code or the database is sample content. Replace it before going live (see the checklist at the end).
+> Todo lo marcado **[PLACEHOLDER]** en el código o en la base de datos es contenido de ejemplo. Sustitúyelo antes de publicar (ver checklist al final).
 
 ---
 
-## 1. Architecture (summary)
+## 1. Arquitectura (resumen)
 
 ```
-Browser ──► Next.js on Vercel
-            ├─ Public pages (static/ISR, cached catalogue) ──► Supabase (publishable key, read-only through RLS)
-            ├─ Server Action "place order" ─► rate limit ─► SQL function create_order (secret key, server only)
-            │                                             · recalculates prices from the DB
-            │                                             · locks and deducts stock atomically
-            └─ /admin ─► proxy (session + admin role) ─► layout (checks again) ─► actions (check again)
-                                                         └─► Supabase with the admin's session: RLS is the final barrier
+Navegador ──► Next.js en Vercel
+            ├─ Páginas públicas (estáticas/ISR, catálogo cacheado) ──► Supabase (clave pública, solo lectura vía RLS)
+            ├─ Server Action "hacer pedido" ─► rate limit ─► función SQL create_order (clave secreta, solo servidor)
+            │                                             · recalcula precios desde la BD
+            │                                             · bloquea y descuenta stock de forma atómica
+            └─ /admin ─► proxy (sesión + rol admin) ─► layout (vuelve a comprobar) ─► acciones (vuelven a comprobar)
+                                                         └─► Supabase con la sesión del admin: RLS es la última barrera
 ```
 
-- **Products and variants:** one perfume is one product. Formats (full bottle, 5 ml decant, 10 ml decant…) are **variants**, each with its own price and stock. Products are never duplicated per size.
-- **Prices:** stored in cents (whole numbers). A price of 0 shows as "Precio por confirmar" (price to be confirmed) and can't be bought.
-- **Orders:** the browser sends only variant IDs and quantities. The server ignores any price that comes from the client.
-- **No card data** is ever stored. Payment is arranged with the customer (transfer, payment link…).
+- **Productos y variantes:** un perfume = un producto. Sus formatos (frasco, decant 5 ml, decant 10 ml…) son **variantes** con precio y stock propios. Nunca se duplican productos por tamaño.
+- **Precios:** en céntimos (enteros). Precio 0 = «Precio por confirmar» (no se puede comprar).
+- **Pedidos:** el navegador solo envía IDs de variante y cantidades. El servidor ignora cualquier precio del cliente.
+- **No se guardan datos de tarjetas.** El pago se acuerda con el cliente (transferencia, enlace de pago…).
 
-### Folder structure
+### Estructura
 
 ```
 supabase/
-  migrations/0001_schema.sql      Tables, relations, indexes, constraints
-  migrations/0002_rls.sql         Grants + Row Level Security policies
+  migrations/0001_schema.sql      Tablas, relaciones, índices, constraints
+  migrations/0002_rls.sql         Permisos + políticas Row Level Security
   migrations/0003_functions.sql   create_order, admin_set_order_status, rate_limit_hit
-  migrations/0004_storage.sql     "product-images" bucket + policies
-  seed.sql                        13 sample products (placeholders)
-  config.toml                     Local Supabase (optional, needs Docker)
+  migrations/0004_storage.sql     Bucket "product-images" + políticas
+  seed.sql                        13 productos de ejemplo (placeholders)
+  config.toml                     Supabase local (opcional, requiere Docker)
 src/
-  proxy.ts                        Protects /admin (first layer)
-  config/site.ts                  ✏️ BRAND COPY (tagline, benefits, testimonials, legal details)
-  app/(store)/…                   Public store: /, /shop, /product/[slug], /decants,
+  proxy.ts                        Protege /admin (primera capa)
+  config/site.ts                  ✏️ TEXTOS DE LA MARCA (frase, beneficios, testimonios, datos legales)
+  app/(store)/…                   Tienda pública: /, /shop, /product/[slug], /decants,
                                   /recommendations, /cart, /checkout, /contact, /legal/*
-  app/admin/…                     Private panel: login, dashboard, orders, products, categories, messages
-  components/                     Reusable UI (store, cart, admin)
-  lib/                            Supabase clients, auth, validation (zod), catalogue, security
+  app/admin/…                     Panel privado: login, dashboard, pedidos, productos, categorías, mensajes
+  components/                     UI reutilizable (tienda, carrito, admin)
+  lib/                            Clientes Supabase, auth, validación (zod), catálogo, seguridad
 ```
 
 ---
 
-## 2. What you need (all free to start)
+## 2. Qué necesitas (todo gratis para empezar)
 
-1. A **GitHub** account: https://github.com
-2. A **Supabase** account: https://supabase.com
-3. A **Vercel** account (sign up with GitHub): https://vercel.com
-4. Optional, only for running it on your computer: **Node.js 20 or later** (https://nodejs.org → "LTS" button).
+1. Cuenta de **GitHub**: https://github.com
+2. Cuenta de **Supabase**: https://supabase.com
+3. Cuenta de **Vercel** (entra con GitHub): https://vercel.com
+4. Opcional, solo para ejecutarla en tu ordenador: **Node.js 20 o superior** (https://nodejs.org → botón "LTS").
 
 ---
 
-## 3. Set up Supabase (step by step)
+## 3. Configurar Supabase (paso a paso)
 
-### 3.1 Create the project
-1. Go to https://supabase.com/dashboard → **New project**.
-2. Name: `smellclub`. **Database Password**: click "Generate a password" and **save it** in a safe place.
-3. Region: pick the one closest to your customers (for Spain, `West EU (Ireland)` or `Central EU (Frankfurt)`).
-4. Click **Create new project** and wait about 2 minutes.
+### 3.1 Crear el proyecto
+1. Entra en https://supabase.com/dashboard → **New project**.
+2. Name: `smellclub`. **Database Password**: pulsa "Generate a password" y **guárdala** en un lugar seguro.
+3. Region: la más cercana a tus clientes (España: `West EU (Ireland)` o `Central EU (Frankfurt)`).
+4. Pulsa **Create new project** y espera ~2 minutos.
 
-### 3.2 Create the tables and security (SQL)
-Repeat this for each file, **in this order**:
+### 3.2 Crear las tablas y la seguridad (SQL)
+Repite esto con cada archivo, **en este orden**:
 `supabase/migrations/0001_schema.sql` → `0002_rls.sql` → `0003_functions.sql` → `0004_storage.sql` → `supabase/seed.sql`
 
-1. On GitHub (or on your computer), open the file and copy **all** of its contents.
-2. In Supabase, left sidebar: **SQL Editor** → **New query**.
-3. Paste the contents and click **Run** (bottom right).
-4. It should say `Success. No rows returned`. If you see an error, stop and send it to me.
+1. En GitHub (o en tu ordenador) abre el archivo y copia **todo** su contenido.
+2. En Supabase, menú izquierdo: **SQL Editor** → **New query**.
+3. Pega el contenido y pulsa **Run** (abajo a la derecha).
+4. Debe decir `Success. No rows returned`. Si aparece un error, detente y envíamelo.
 
-> `seed.sql` is optional: it creates the 13 sample products (Asad, Khamrah, CDN Intense…) with price 0 and stock 0. You can edit or delete them from the panel.
+> `seed.sql` es opcional: crea los 13 productos de ejemplo (Asad, Khamrah, CDN Intense…) con precio 0 y stock 0. Puedes editarlos o borrarlos desde el panel.
 
-### 3.3 Turn off public sign-ups (important)
-1. Left sidebar: **Authentication** → **Sign In / Providers** (or **Settings**, depending on the version).
-2. Turn **OFF** "**Allow new users to sign up**".
-3. Leave the **Email** provider **ON** (you log in to the panel with it).
-4. Click **Save**.
+### 3.3 Desactivar registros públicos (importante)
+1. Menú izquierdo: **Authentication** → **Sign In / Providers** (o **Settings**, según la versión).
+2. **Desactiva** "**Allow new users to sign up**".
+3. Deja el proveedor **Email ACTIVADO** (con él entras al panel).
+4. Pulsa **Save**.
 
-### 3.4 Copy the keys
-1. Left sidebar: **Project Settings** (gear icon) → **Data API** → copy the **Project URL** → this is `NEXT_PUBLIC_SUPABASE_URL`.
+### 3.4 Copiar las claves
+1. Menú izquierdo: **Project Settings** (engranaje) → **Data API** → copia **Project URL** → es `NEXT_PUBLIC_SUPABASE_URL`.
 2. **Project Settings** → **API Keys**:
    - **Publishable key** (`sb_publishable_…`) → `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
-   - **Secret key** (`sb_secret_…`, click "Reveal") → `SUPABASE_SECRET_KEY` 🔒
-   - If you only see "anon" and "service_role" (legacy keys): anon → publishable, service_role → secret.
+   - **Secret key** (`sb_secret_…`, pulsa "Reveal") → `SUPABASE_SECRET_KEY` 🔒
+   - Si solo ves "anon" y "service_role" (claves antiguas): anon → publishable, service_role → secret.
 
-> 🔒 **Never** paste the secret key into code, chats, screenshots or any variable that starts with `NEXT_PUBLIC_`.
+> 🔒 **Nunca** pegues la clave secreta en el código, chats, capturas ni en variables que empiecen por `NEXT_PUBLIC_`.
 
-### 3.5 Create the first administrator
+### 3.5 Crear el primer administrador
 1. **Authentication** → **Users** → **Add user** → **Create new user**.
-2. Enter your email and a **strong password** (16+ characters). Tick **Auto Confirm User**. Click **Create user**.
-3. Go to **SQL Editor** → **New query**, paste this (replacing the email with yours) and click **Run**:
+2. Escribe tu email y una **contraseña fuerte** (16+ caracteres). Marca **Auto Confirm User**. Pulsa **Create user**.
+3. Ve a **SQL Editor** → **New query**, pega esto (cambiando el email por el tuyo) y pulsa **Run**:
 
 ```sql
 insert into public.admin_users (user_id, role)
-select id, 'owner' from auth.users where email = 'YOUR-EMAIL@example.com';
+select id, 'owner' from auth.users where email = 'TU-EMAIL@ejemplo.com';
 ```
 
-4. It should say `Success. 1 row`. If it says `0 rows`, the email doesn't match the user exactly.
+4. Debe decir `Success. 1 row`. Si dice `0 rows`, el email no coincide exactamente con el usuario.
 
-Add more admins the same way (with `'admin'` instead of `'owner'`). To remove one:
+Para añadir más admins repite el proceso (con `'admin'` en lugar de `'owner'`). Para quitar uno:
 ```sql
 delete from public.admin_users where user_id = (select id from auth.users where email = 'EMAIL');
 ```
 
 ---
 
-## 4. Upload the code to GitHub
+## 4. El código en GitHub
 
-The code is already in the repository `smellclub/smell-club-claude`, on the branch `claude/smellclub-ecommerce-build-it4497`.
+El código ya está en el repositorio `smellclub/smell-club-claude`, rama `claude/smellclub-ecommerce-build-it4497`.
 
-1. Open the repository on GitHub. You'll see a yellow bar "…had recent pushes" → **Compare & pull request** → **Create pull request** → **Merge pull request** → **Confirm merge**. That puts the code on the main branch (`main`).
-2. Check that **no `.env.local` file** appears in the repository (the `.gitignore` already blocks it).
+1. Abre el repositorio en GitHub. Verás una barra amarilla "…had recent pushes" → **Compare & pull request** → **Create pull request** → **Merge pull request** → **Confirm merge**. Así el código pasa a la rama principal (`main`).
+2. Comprueba que **no aparece ningún archivo `.env.local`** en el repositorio (el `.gitignore` ya lo bloquea).
 
 ---
 
-## 5. Deploy on Vercel
+## 5. Desplegar en Vercel
 
 1. Go to https://vercel.com/new → **Import Git Repository** → choose `smell-club-claude` → **Import**.
-2. Framework: it should detect **Next.js** automatically. Don't change anything under "Build and Output Settings".
-3. Open **Environment Variables** and add, one by one (Name → Value):
+2. Framework: debe detectar **Next.js** solo. No cambies nada en "Build and Output Settings".
+3. Despliega **Environment Variables** y añade una a una (Name → Value):
 
-| Name | Value |
+| Nombre | Valor |
 |---|---|
-| `NEXT_PUBLIC_SITE_URL` | `https://your-domain.com` (while you don't have one: the `https://…vercel.app` URL Vercel gives you) |
-| `NEXT_PUBLIC_SUPABASE_URL` | Project URL (step 3.4) |
+| `NEXT_PUBLIC_SITE_URL` | `https://tu-dominio.com` (mientras no tengas: la URL `https://…vercel.app` que te da Vercel) |
+| `NEXT_PUBLIC_SUPABASE_URL` | Project URL (paso 3.4) |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Publishable key |
 | `SUPABASE_SECRET_KEY` 🔒 | Secret key |
-| `RATE_LIMIT_SALT` 🔒 | A long random text (40+ characters). Generate one at https://1password.com/password-generator |
-| `NEXT_PUBLIC_CURRENCY` | `EUR` (or `USD`, `MXN`, `COP`, `CLP`, `ARS`…) |
-| `NEXT_PUBLIC_LOCALE` | `es-ES` (or `es-MX`, `es-CO`, `es-AR`…) |
-| `NEXT_PUBLIC_WHATSAPP_NUMBER` | Digits only with country code, e.g. `34600111222` (leave empty until you have it) |
-| `NEXT_PUBLIC_INSTAGRAM_URL` | e.g. `https://www.instagram.com/your_account` (leave empty until you have it) |
-| `NEXT_PUBLIC_CONTACT_EMAIL` | Your contact email (optional) |
+| `RATE_LIMIT_SALT` 🔒 | Texto aleatorio largo (40+ caracteres). Genéralo en https://1password.com/password-generator |
+| `NEXT_PUBLIC_CURRENCY` | `EUR` (o `USD`, `MXN`, `COP`, `CLP`, `ARS`…) |
+| `NEXT_PUBLIC_LOCALE` | `es-ES` (o `es-MX`, `es-CO`, `es-AR`…) |
+| `NEXT_PUBLIC_WHATSAPP_NUMBER` | Solo dígitos con prefijo de país, ej. `34600111222` (vacío hasta tenerlo) |
+| `NEXT_PUBLIC_INSTAGRAM_URL` | ej. `https://www.instagram.com/tu_cuenta` (vacío hasta tenerlo) |
+| `NEXT_PUBLIC_CONTACT_EMAIL` | Email de contacto (opcional) |
 
-4. Click **Deploy** and wait 1–2 minutes.
-5. Open the URL Vercel shows you. Go to `/admin` and log in with the admin you created.
+4. Pulsa **Deploy** y espera 1-2 minutos.
+5. Abre la URL que te da Vercel. Entra en `/admin` con el administrador creado.
 
-**Whenever you change a variable in Vercel:** Project → **Deployments** → the latest one → "⋯" → **Redeploy**. `NEXT_PUBLIC_*` variables are applied at build time.
+**Cada vez que cambies una variable en Vercel:** Project → **Deployments** → el último → "⋯" → **Redeploy**. Las variables `NEXT_PUBLIC_*` se aplican al compilar.
 
-### Your own domain
-Vercel → Project → **Settings** → **Domains** → **Add** → type your domain and follow the DNS records it shows you (you add them at the provider where you bought the domain). Then update `NEXT_PUBLIC_SITE_URL` and redeploy.
+### Dominio propio
+Vercel → Project → **Settings** → **Domains** → **Add** → escribe tu dominio y sigue los registros DNS que te indique (se ponen en el proveedor donde compraste el dominio). Después actualiza `NEXT_PUBLIC_SITE_URL` y haz Redeploy.
 
-Also in Supabase → **Authentication** → **URL Configuration** → **Site URL**: put your final URL.
-
----
-
-## 6. Using the admin panel
-
-- **Products → + Nuevo producto (new product):** fill in the details, formats (bottle / 5 ml decant / 10 ml decant), price and stock. Save, then upload photos (compressed automatically; vertical 4:5 recommended).
-- **Estado (status):** only "Publicado" (published) products show in the store. "Borrador" (draft) hides it while you work on it. "Archivado" (archived) removes it from the store without deleting it.
-- **Destacado / Nuevo / Recomendado (featured / new / recommended):** control the home sections and `/recommendations`.
-- **Precio anterior (previous price):** if it's higher than the price, the discount shows automatically.
-- **Pedidos (orders):** change the status (Pendiente → Confirmado → Preparando → Enviado → Entregado). If you **cancel**, stock is restored automatically and the order can't be reopened.
-- **Stock:** it goes down automatically with each order. You can adjust it by hand in each variant.
-- **Brand copy (tagline, benefits, testimonials, legal details):** edit `src/config/site.ts` (on GitHub: open the file → pencil icon → change it → "Commit changes"; Vercel redeploys on its own).
+En Supabase → **Authentication** → **URL Configuration** → **Site URL**: pon tu URL final.
 
 ---
 
-## 7. Running it on your computer (optional)
+## 6. Uso del panel
+
+- **Productos → + Nuevo producto:** rellena datos, formatos (frasco / decant 5 ml / decant 10 ml), precio y stock. Guarda y después sube fotos (se optimizan solas; recomendado vertical 4:5).
+- **Estado:** solo los «Publicado» aparecen en la tienda. «Borrador» lo oculta mientras lo preparas. «Archivado» lo retira sin borrarlo.
+- **Destacado / Nuevo / Recomendado:** controlan las secciones de la home y `/recommendations`.
+- **Precio anterior:** si es mayor que el precio, se muestra el descuento automáticamente.
+- **Pedidos:** cambia el estado (Pendiente → Confirmado → Preparando → Enviado → Entregado). Si **cancelas**, el stock se repone solo y el pedido no se puede reabrir.
+- **Stock:** baja automáticamente con cada pedido. Puedes ajustarlo a mano en cada variante.
+- **Textos de marca (frase, beneficios, testimonios, datos legales):** edita `src/config/site.ts` (en GitHub: abre el archivo → icono del lápiz → cambia → "Commit changes"; Vercel redespliega solo).
+
+---
+
+## 7. Ejecutar en tu ordenador (opcional)
 
 ```bash
 npm install
-cp .env.example .env.local   # then fill in the values
-npm run dev                  # open http://localhost:3000
-npm run check                # types + lint + production build
+cp .env.example .env.local   # y rellena los valores
+npm run dev                  # abre http://localhost:3000
+npm run check                # tipos + lint + build de producción
 ```
 
-With Docker installed you can use a local Supabase: `npx supabase start` (it applies `migrations/` and `seed.sql`).
+Con Docker instalado puedes usar Supabase local: `npx supabase start` (aplica `migrations/` y `seed.sql`).
 
 ---
 
-## 8. Security: what's implemented
+## 8. Seguridad implementada
 
-| Risk | Protection |
+| Riesgo | Protección |
 |---|---|
-| Unauthorised admin access | 3 layers: `proxy.ts` + panel `layout` + `requireAdmin()` in every action. RLS in the DB (`is_admin()`). Public sign-ups turned off |
-| Privilege escalation | `admin_users` has no write policies: nobody can promote themselves through the API. Only by SQL in the dashboard |
-| Price tampering | The client sends only IDs and quantities. `create_order` reads prices from the DB (tested: an item tampered to €0.01 was charged at its real price) |
-| Stock tampering / overselling | `FOR UPDATE` lock + `stock >= 0` constraint. Tested with 8 simultaneous orders on stock 1 → 1 accepted, 7 rejected |
-| IDOR | The public can't read orders (RLS + no GRANT). There is no public endpoint to look up orders |
-| SQL injection | supabase-js parameterised queries + SQL functions with `search_path = ''`. LIKE wildcards are escaped |
-| XSS | React escapes everything; the only `dangerouslySetInnerHTML` is JSON-LD with `<` escaped. Inputs cleaned (control characters, bidi) |
-| CSRF | Server Actions with Origin checking (Next.js) + `SameSite=Lax` cookies |
-| Sessions | `httpOnly`, `Secure` (in production), `SameSite=Lax` cookies. Token validated against Supabase Auth (`getUser`) |
-| Abuse / bots | Rate limiting in PostgreSQL: orders 5/10 min, contact 3/15 min, login 10/15 min per IP and 5/15 min per email. Honeypot field |
-| Uploads | Admin only; real type checked by magic bytes (JPG/PNG/WebP/AVIF, no SVG); max 3.5 MB; random names; bucket with MIME and size limits; EXIF/GPS removed |
-| Secrets | Only in env variables; `server-only` stops them being imported in the browser; `.env*` in `.gitignore`. Checked: the client bundle contains no secrets |
-| Headers | CSP, HSTS, X-Frame-Options DENY, nosniff, Referrer-Policy, Permissions-Policy, COOP. `/admin` with `noindex` and `no-store` |
-| Errors | Generic messages for the user; technical details only in server logs (error codes, no personal data) |
-| Personal data | IPs stored only as a salted SHA-256 hash. No card data |
+| Acceso no autorizado al admin | 3 capas: `proxy.ts` + `layout` del panel + `requireAdmin()` en cada acción. RLS en BD (`is_admin()`). Registros públicos desactivados |
+| Escalada de privilegios | `admin_users` sin políticas de escritura: nadie puede auto-promocionarse por API. Solo por SQL en el dashboard |
+| Manipulación de precios | El cliente solo envía IDs y cantidades. `create_order` lee precios de la BD (probado: un artículo manipulado a 0,01 € se cobró a su precio real) |
+| Manipulación de stock / sobreventa | Bloqueo `FOR UPDATE` + constraint `stock >= 0`. Probado con 8 pedidos simultáneos sobre stock 1 → 1 aceptado, 7 rechazados |
+| IDOR | El público no puede leer pedidos (RLS + sin GRANT). No existe endpoint público de consulta de pedidos |
+| SQL injection | Consultas parametrizadas de supabase-js + funciones SQL con `search_path = ''`. Comodines LIKE escapados |
+| XSS | React escapa todo; el único `dangerouslySetInnerHTML` es JSON-LD con `<` escapado. Inputs limpiados (caracteres de control, bidi) |
+| CSRF | Server Actions con verificación de Origin (Next.js) + cookies `SameSite=Lax` |
+| Sesiones | Cookies `httpOnly`, `Secure` (en producción), `SameSite=Lax`. Token validado contra Supabase Auth (`getUser`) |
+| Abuso / bots | Rate limiting en PostgreSQL: pedidos 5/10 min, contacto 3/15 min, login 10/15 min por IP y 5/15 min por email. Campo trampa (honeypot) |
+| Subidas | Solo admin; tipo real verificado por magic bytes (JPG/PNG/WebP/AVIF, sin SVG); máx. 3,5 MB; nombres aleatorios; bucket con límite de MIME y tamaño; se eliminan EXIF/GPS |
+| Secretos | Solo en variables de entorno; `server-only` impide importarlos en el navegador; `.env*` en `.gitignore`. Verificado: el bundle del cliente no contiene secretos |
+| Cabeceras | CSP, HSTS, X-Frame-Options DENY, nosniff, Referrer-Policy, Permissions-Policy, COOP. `/admin` con `noindex` y `no-store` |
+| Errores | Mensajes genéricos al usuario; detalles técnicos solo en logs del servidor (códigos, sin datos personales) |
+| Datos personales | IPs solo como hash SHA-256 con sal. Sin datos de tarjetas |
 
-**CSP note:** `script-src` includes `'unsafe-inline'` because Next.js needs it without nonces. Using nonces would force every page to render on each request (slower). Every other directive is strict.
+**Nota CSP:** `script-src` incluye `'unsafe-inline'` porque Next.js lo necesita sin nonces; usar nonces obligaría a renderizar cada página en cada visita (más lento). El resto de directivas son estrictas.
 
 ---
 
-## 9. ✅ Final security checklist
+## 9. ✅ Checklist final de seguridad
 
-- [ ] Public sign-ups **turned off** in Supabase (step 3.3).
-- [ ] Only your user is in `admin_users` (`select * from admin_users;`).
-- [ ] Admin password of 16+ characters, not used anywhere else.
-- [ ] (Recommended) Turn on MFA/2FA on your **Supabase**, **Vercel** and **GitHub** accounts.
-- [ ] `SUPABASE_SECRET_KEY` and `RATE_LIMIT_SALT` exist **only** in Vercel (never with `NEXT_PUBLIC_`).
-- [ ] No `.env.local` in the GitHub repository.
-- [ ] Supabase → **Advisors → Security Advisor**: no critical warnings.
-- [ ] Supabase → **Database → Tables**: every table shows "RLS enabled".
-- [ ] Open `/admin` in a private window → it must redirect to the login page.
-- [ ] If a key ever leaks: Supabase → API Keys → **Roll/Revoke** it, update Vercel and redeploy.
+- [ ] Registros públicos **desactivados** en Supabase (paso 3.3).
+- [ ] Solo tu usuario está en `admin_users` (`select * from admin_users;`).
+- [ ] Contraseña del admin de 16+ caracteres y no reutilizada.
+- [ ] (Recomendado) Activa MFA/2FA en tus cuentas de **Supabase**, **Vercel** y **GitHub**.
+- [ ] `SUPABASE_SECRET_KEY` y `RATE_LIMIT_SALT` están **solo** en Vercel (nunca con `NEXT_PUBLIC_`).
+- [ ] No hay `.env.local` en el repositorio de GitHub.
+- [ ] Supabase → **Advisors → Security Advisor**: sin avisos críticos.
+- [ ] Supabase → **Database → Tables**: todas las tablas muestran "RLS enabled".
+- [ ] Abre `/admin` en una ventana privada → debe redirigir al login.
+- [ ] Si alguna clave se filtra: Supabase → API Keys → **Roll/Revoke**, actualiza Vercel y Redeploy.
 
-## 10. ✅ Before going live
+## 10. ✅ Antes de publicar la web
 
-- [ ] Real prices, stock, sizes, descriptions and notes for every product (remove the `[PLACEHOLDER]` text and the `[TAMAÑO POR CONFIRMAR]` label).
-- [ ] Brands marked `[VERIFICAR MARCA]` (Emeer, CDN Bling) confirmed.
-- [ ] Real photos uploaded.
-- [ ] `src/config/site.ts`: tagline, benefits (shipping!), **real testimonials or an empty list**, legal details.
-- [ ] Legal pages (`/legal/…`) reviewed and adapted to your country (they are guidance templates, not legal advice).
-- [ ] Decant FAQ (`/decants`) and business hours (`/contact`) filled in.
-- [ ] WhatsApp, Instagram and email set in Vercel, then redeploy.
-- [ ] `NEXT_PUBLIC_SITE_URL` with the final domain, and the Site URL in Supabase updated.
-- [ ] Place a real test order from your phone, check it in `/admin`, and cancel it (stock goes back).
-- [ ] Try the site on iPhone and Android, including opening a link from Instagram.
-- [ ] Supabase: check your plan's backups (Database → Backups).
+- [ ] Precios, stock, tamaños, descripciones y notas reales en cada producto (quitar `[PLACEHOLDER]` y `[TAMAÑO POR CONFIRMAR]`).
+- [ ] Confirmadas las marcas marcadas `[VERIFICAR MARCA]` (Emeer, CDN Bling).
+- [ ] Fotos reales subidas.
+- [ ] `src/config/site.ts`: frase, beneficios (¡envíos!), **testimonios reales o lista vacía**, datos legales.
+- [ ] Páginas legales (`/legal/…`) revisadas y adaptadas a tu país (son plantillas orientativas, no asesoramiento jurídico).
+- [ ] FAQ de decants (`/decants`) y horario (`/contact`) completados.
+- [ ] WhatsApp, Instagram y email configurados en Vercel y Redeploy.
+- [ ] `NEXT_PUBLIC_SITE_URL` con el dominio final y Site URL de Supabase actualizada.
+- [ ] Haz un pedido de prueba desde el móvil, revísalo en `/admin` y cancélalo (el stock vuelve).
+- [ ] Prueba la web en iPhone y Android, incluido abrir un enlace desde Instagram.
+- [ ] Supabase: revisa las copias de seguridad de tu plan (Database → Backups).
