@@ -111,12 +111,20 @@ delete from public.admin_users where user_id = (select id from auth.users where 
 
 ## 4. El código en GitHub
 
-El código ya está en el repositorio `smellclub/smell-club-claude`, rama `claude/smellclub-ecommerce-build-it4497`.
+El código ya está subido al repositorio `smellclub/Smell-club-claude`. Como el repositorio estaba vacío, la rama `claude/smellclub-ecommerce-build-it4497` es la **única** y GitHub la ha puesto automáticamente como rama principal. **No tienes que fusionar nada** (por eso no aparece ninguna barra amarilla ni botón de "pull request").
 
-1. Abre el repositorio en GitHub. Verás una barra amarilla "…had recent pushes" → **Compare & pull request** → **Create pull request** → **Merge pull request** → **Confirm merge**. Así el código pasa a la rama principal (`main`).
-2. Comprueba que **no aparece ningún archivo `.env.local`** en el repositorio (el `.gitignore` ya lo bloquea).
+Solo comprueba esto:
+1. Abre https://github.com/smellclub/Smell-club-claude
+2. Debes ver las carpetas `src` y `supabase` y los archivos `README.md`, `package.json`, `.env.example`, etc.
+3. Comprueba que **no aparece ningún archivo `.env.local`** (el `.gitignore` ya lo bloquea).
 
----
+**Opcional: renombrar la rama a `main`** (nombre más corto y estándar):
+1. En el repositorio, pulsa **Settings** (arriba a la derecha, icono de engranaje).
+2. En **General**, busca la sección **Default branch**.
+3. Pulsa el **icono del lápiz** junto a `claude/smellclub-ecommerce-build-it4497`.
+4. Escribe `main` y pulsa **Rename branch**.
+
+Hazlo **antes** del paso 5. Si lo haces después, Vercel lo detecta solo igualmente.
 
 ## 5. Desplegar en Vercel
 
