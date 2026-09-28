@@ -11,6 +11,8 @@ import { GENDERS, OLFACTORY_FAMILIES, labelOf } from "@/lib/constants";
 import { publicEnv } from "@/lib/env";
 import { isPurchasable, mainImage, pricedVariants } from "@/lib/product";
 import { safeJsonLd } from "@/lib/utils";
+
+const absoluteUrl = (url: string) => (url.startsWith("/") ? `${publicEnv.siteUrl}${url}` : url);
 import { whatsappLink } from "@/lib/whatsapp";
 
 export const revalidate = 300;
@@ -40,7 +42,7 @@ export async function generateMetadata({ params }: PageProps<"/product/[slug]">)
       title: `${product.name} · ${product.brand}`,
       description,
       url: `/product/${product.slug}`,
-      ...(image ? { images: [{ url: image.url, alt: image.alt ?? product.name }] } : {}),
+      ...(image ? { images: [{ url: absoluteUrl(image.url), alt: image.alt ?? product.name }] } : {}),
     },
   };
 }
@@ -78,7 +80,7 @@ export default async function ProductPage({ params }: PageProps<"/product/[slug]
     name: product.name,
     brand: { "@type": "Brand", name: product.brand },
     url: productUrl,
-    ...(image ? { image: product.images.map((i) => i.url) } : {}),
+    ...(image ? { image: product.images.map((i) => absoluteUrl(i.url)) } : {}),
     ...(!isPlaceholderDescription && product.description ? { description: product.description.slice(0, 500) } : {}),
     ...(product.category ? { category: product.category.name } : {}),
     ...(priced.length

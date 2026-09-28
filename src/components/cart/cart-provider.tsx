@@ -56,7 +56,8 @@ function isCartItem(v: unknown): v is CartItem {
     typeof o.priceCents === "number" &&
     Number.isInteger(o.priceCents) &&
     o.priceCents >= 0 &&
-    (o.image === null || (typeof o.image === "string" && o.image.startsWith("https://"))) &&
+    (o.image === null ||
+      (typeof o.image === "string" && (o.image.startsWith("https://") || /^\/products\/[a-z0-9-]+\.(jpg|png)$/.test(o.image)))) &&
     typeof o.quantity === "number" &&
     Number.isInteger(o.quantity) &&
     o.quantity >= 1 &&

@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { MAX_CART_LINES } from "@/lib/constants";
-import { mapProduct, PRODUCT_SELECT } from "@/lib/catalog";
+import { mapProduct, PRODUCT_SELECT, publicView } from "@/lib/catalog";
 import { mainImage } from "@/lib/product";
 import { getPublicSupabase } from "@/lib/supabase/public";
 import { uuid } from "@/lib/validation/common";
@@ -51,7 +51,7 @@ export async function refreshCart(variantIds: unknown): Promise<FreshVariant[]> 
 
   const out: FreshVariant[] = [];
   for (const row of productRows as Record<string, unknown>[]) {
-    const product = mapProduct(row);
+    const product = publicView(mapProduct(row));
     const image = mainImage(product);
     for (const v of product.variants) {
       if (!parsed.data.includes(v.id)) continue;

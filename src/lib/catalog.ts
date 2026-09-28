@@ -2,6 +2,7 @@ import "server-only";
 import { unstable_cache } from "next/cache";
 import { GENDERS, OLFACTORY_FAMILIES, PRODUCT_STATUSES, VARIANT_KINDS } from "@/lib/constants";
 import { getPublicSupabase } from "@/lib/supabase/public";
+import { legacyImages } from "@/config/legacy-images";
 import { sortVariants, storagePublicUrl } from "@/lib/product";
 import type { Category, Product, Variant } from "@/types/domain";
 
@@ -98,12 +99,17 @@ class CatalogUnavailableError extends Error {}
 const isPlaceholder = (text: string | null) => Boolean(text && text.trim().startsWith("[PLACEHOLDER]"));
 const stripBrackets = (text: string) => text.replace(/\s*\[[^\]]*\]\s*/g, " ").trim();
 
-function publicView(p: Product): Product {
+export function publicView(p: Product): Product {
   return {
     ...p,
     description: isPlaceholder(p.description) ? "" : p.description,
     recommendationText: isPlaceholder(p.recommendationText) ? null : p.recommendationText,
     variants: p.variants.map((v) => ({ ...v, label: stripBrackets(v.label) || v.label })),
+    // Sin fotos subidas desde el panel → foto importada de la web antigua (si existe)
+    images:
+      p.images.length === 0 && legacyImages[p.slug]
+        ? [{ id: `legacy-${p.slug}`, path: "", url: legacyImages[p.slug], alt: `${p.name} de ${p.brand}`, position: 0 }]
+        : p.images,
   };
 }
 
@@ -126,7 +132,7 @@ const cachedProducts = unstable_cache(
     if (error) throw new CatalogUnavailableError(error.code);
     return (data as Row[]).map(mapProduct).map(publicView);
   },
-  ["catalog-products-v3"],
+  ["catalog-products-v4"],
   { tags: [CATALOG_TAG], revalidate: 300 },
 );
 

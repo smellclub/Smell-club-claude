@@ -2,18 +2,23 @@ import { publicEnv } from "@/lib/env";
 
 const formatters = new Map<string, Intl.NumberFormat>();
 
-function formatter(currency: string): Intl.NumberFormat {
-  let f = formatters.get(currency);
+function formatter(currency: string, decimals: boolean): Intl.NumberFormat {
+  const key = `${currency}:${decimals}`;
+  let f = formatters.get(key);
   if (!f) {
-    f = new Intl.NumberFormat(publicEnv.locale, { style: "currency", currency });
-    formatters.set(currency, f);
+    f = new Intl.NumberFormat(publicEnv.locale, {
+      style: "currency",
+      currency,
+      ...(decimals ? {} : { minimumFractionDigits: 0, maximumFractionDigits: 0 }),
+    });
+    formatters.set(key, f);
   }
   return f;
 }
 
-/** Formatea céntimos → "25,00 €" */
+/** Formatea céntimos → "$ 2.599" (sin decimales si el importe es redondo) o "25,50 €" */
 export function formatPrice(cents: number, currency: string = publicEnv.currency): string {
-  return formatter(currency).format(cents / 100);
+  return formatter(currency, cents % 100 !== 0).format(cents / 100);
 }
 
 /**
