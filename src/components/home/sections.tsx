@@ -167,7 +167,7 @@ export function BenefitsSection() {
     <section className="border-y border-line py-20 sm:py-24">
       <Container>
         <SectionHeading eyebrow="Por qué Smellclub" title="Comprar perfume, sin dudas" />
-        <div className="mt-14 grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-14 grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
           {siteConfig.benefits.map((b) => {
             const Icon = benefitIcons[b.icon as keyof typeof benefitIcons] ?? SparkleIcon;
             return (
@@ -211,27 +211,26 @@ export function TestimonialsSection() {
 }
 
 export function InstagramSection({ instagramUrl, whatsappHref }: { instagramUrl: string; whatsappHref: string | null }) {
+  if (!instagramUrl) return null;
   const handle = instagramUrl ? instagramUrl.replace(/^https:\/\/(www\.)?instagram\.com\//, "@").replace(/\/$/, "") : "";
   return (
     <section className="py-20 sm:py-28">
       <Container className="flex flex-col items-center text-center">
         <InstagramIcon size={32} className="text-gold-dark" />
         <p className="eyebrow mt-6 text-gold-dark">Síguenos</p>
-        <h2 className="mt-3 font-display text-4xl sm:text-5xl">{handle || "Instagram [PLACEHOLDER]"}</h2>
+        <h2 className="mt-3 font-display text-4xl sm:text-5xl">{handle}</h2>
         <p className="mt-4 max-w-md text-sm text-muted">
           Novedades, reseñas de fragancias y recomendaciones. Escríbenos por mensaje directo si tienes dudas.
         </p>
         <div className="mt-8 flex w-full max-w-sm flex-col gap-3 sm:max-w-none sm:flex-row sm:justify-center">
-          {instagramUrl && (
-            <a
-              href={instagramUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex min-h-12 items-center justify-center gap-2 bg-ink px-6 text-[0.72rem] font-medium tracking-[0.18em] text-ivory uppercase hover:text-gold-light"
-            >
-              <InstagramIcon size={18} /> Ver Instagram
-            </a>
-          )}
+          <a
+            href={instagramUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-12 items-center justify-center gap-2 bg-ink px-6 text-[0.72rem] font-medium tracking-[0.18em] text-ivory uppercase hover:text-gold-light"
+          >
+            <InstagramIcon size={18} /> Ver Instagram
+          </a>
           {whatsappHref && (
             <a
               href={whatsappHref}

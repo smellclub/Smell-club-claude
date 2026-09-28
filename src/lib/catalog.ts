@@ -94,6 +94,19 @@ export function mapCategory(r: Row): Category {
 
 class CatalogUnavailableError extends Error {}
 
+/** Textos de ejemplo del seed ("[PLACEHOLDER] …", "[TAMAÑO POR CONFIRMAR]") nunca se muestran al público. */
+const isPlaceholder = (text: string | null) => Boolean(text && text.trim().startsWith("[PLACEHOLDER]"));
+const stripBrackets = (text: string) => text.replace(/\s*\[[^\]]*\]\s*/g, " ").trim();
+
+function publicView(p: Product): Product {
+  return {
+    ...p,
+    description: isPlaceholder(p.description) ? "" : p.description,
+    recommendationText: isPlaceholder(p.recommendationText) ? null : p.recommendationText,
+    variants: p.variants.map((v) => ({ ...v, label: stripBrackets(v.label) || v.label })),
+  };
+}
+
 /**
  * Las funciones cacheadas LANZAN si falla la carga (o falta configuración):
  * unstable_cache no guarda errores, así que nunca se cachea un catálogo
@@ -111,9 +124,9 @@ const cachedProducts = unstable_cache(
       .order("created_at", { ascending: false })
       .limit(1000);
     if (error) throw new CatalogUnavailableError(error.code);
-    return (data as Row[]).map(mapProduct);
+    return (data as Row[]).map(mapProduct).map(publicView);
   },
-  ["catalog-products-v2"],
+  ["catalog-products-v3"],
   { tags: [CATALOG_TAG], revalidate: 300 },
 );
 
@@ -127,9 +140,9 @@ const cachedCategories = unstable_cache(
       .eq("is_active", true)
       .order("sort_order", { ascending: true });
     if (error) throw new CatalogUnavailableError(error.code);
-    return (data as Row[]).map(mapCategory);
+    return (data as Row[]).map(mapCategory).map((c) => (isPlaceholder(c.description) ? { ...c, description: null } : c));
   },
-  ["catalog-categories-v2"],
+  ["catalog-categories-v3"],
   { tags: [CATALOG_TAG], revalidate: 300 },
 );
 

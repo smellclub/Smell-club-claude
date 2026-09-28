@@ -9,11 +9,11 @@ import { publicEnv } from "@/lib/env";
  * Revisa y adapta el texto a la normativa de tu país antes de publicar.
  */
 
-type Section = { title: string; body: string[] };
+type Section = { title: string; body: Array<string | false> };
 type LegalPage = { title: string; description: string; sections: Section[] };
 
 const { legal } = siteConfig;
-const contact = publicEnv.contactEmail || "[PLACEHOLDER] email de contacto";
+const contact = publicEnv.contactEmail || "el formulario de la página de contacto";
 
 const pages: Record<string, LegalPage> = {
   "aviso-legal": {
@@ -23,9 +23,9 @@ const pages: Record<string, LegalPage> = {
       {
         title: "Titular",
         body: [
-          `Titular: ${legal.ownerName}`,
-          `Identificación fiscal: ${legal.taxId}`,
-          `Domicilio: ${legal.address}`,
+          legal.ownerName && `Titular: ${legal.ownerName}`,
+          legal.taxId && `Identificación fiscal: ${legal.taxId}`,
+          legal.address && `Domicilio: ${legal.address}`,
           `Contacto: ${contact}`,
         ],
       },
@@ -38,7 +38,7 @@ const pages: Record<string, LegalPage> = {
       },
       {
         title: "Legislación aplicable",
-        body: [`Estas condiciones se rigen por la legislación de ${legal.jurisdiction}.`],
+        body: [legal.jurisdiction && `Estas condiciones se rigen por la legislación de ${legal.jurisdiction}.`],
       },
     ],
   },
@@ -48,7 +48,10 @@ const pages: Record<string, LegalPage> = {
     sections: [
       {
         title: "Responsable del tratamiento",
-        body: [`${legal.ownerName} · ${legal.taxId} · ${legal.address} · ${contact}`],
+        body: [
+          [legal.ownerName, legal.taxId, legal.address].filter(Boolean).join(" · ") || "Smellclub",
+          `Contacto: ${contact}`,
+        ],
       },
       {
         title: "Qué datos recogemos",
@@ -68,13 +71,13 @@ const pages: Record<string, LegalPage> = {
       },
       {
         title: "Cuánto tiempo los conservamos",
-        body: ["[PLACEHOLDER] Indica el plazo de conservación (p. ej. el exigido por la normativa fiscal)."],
+        body: ["Conservamos tus datos el tiempo necesario para gestionar tu pedido o consulta y cumplir las obligaciones legales aplicables."],
       },
       {
         title: "Con quién los compartimos",
         body: [
           "Proveedores técnicos necesarios para prestar el servicio: alojamiento web (Vercel) y base de datos (Supabase).",
-          "[PLACEHOLDER] Empresa de transporte, si aplica.",
+          "Si eliges envío, la empresa de transporte recibe los datos necesarios para la entrega.",
         ],
       },
       {
@@ -104,12 +107,14 @@ const pages: Record<string, LegalPage> = {
       {
         title: "Decants",
         body: [
-          "Los decants son fracciones del perfume original trasvasadas a atomizadores. [PLACEHOLDER] Detalla aquí el proceso y el tipo de envase.",
+          "Los decants son fracciones del perfume original trasvasadas a atomizadores de menor tamaño.",
         ],
       },
       {
         title: "Pago",
-        body: ["[PLACEHOLDER] Métodos de pago aceptados y plazos."],
+        body: [
+          "El método de pago se acuerda contigo al confirmar el pedido. Esta web nunca solicita ni almacena datos de tarjetas.",
+        ],
       },
       {
         title: "Envíos",
@@ -121,12 +126,18 @@ const pages: Record<string, LegalPage> = {
     title: "Envíos y devoluciones",
     description: "Plazos, costes de envío y política de devoluciones.",
     sections: [
-      { title: "Zonas y plazos de envío", body: ["[PLACEHOLDER] Indica zonas, plazos y transportista."] },
-      { title: "Costes de envío", body: ["[PLACEHOLDER] Indica costes o umbral de envío gratuito, si existe."] },
+      {
+        title: "Envíos",
+        body: [
+          "El coste, el plazo y el método de envío dependen del destino y se confirman contigo antes de cerrar el pedido.",
+          "También puedes elegir recogida o entrega en mano al hacer el pedido.",
+        ],
+      },
       {
         title: "Devoluciones",
         body: [
-          "[PLACEHOLDER] Indica condiciones de devolución. Recuerda que, por motivos de higiene, los perfumes abiertos y los decants pueden tener condiciones específicas según la normativa aplicable.",
+          "Si tienes cualquier incidencia con tu pedido, escríbenos lo antes posible y buscaremos una solución.",
+          "Por motivos de higiene, los perfumes abiertos y los decants pueden tener condiciones de devolución específicas según la normativa aplicable.",
         ],
       },
     ],
@@ -161,7 +172,7 @@ export default async function LegalPage({ params }: PageProps<"/legal/[page]">) 
           <section key={s.title}>
             <h2 className="font-display text-2xl">{s.title}</h2>
             <div className="mt-3 flex flex-col gap-3 text-sm leading-relaxed text-ink/80">
-              {s.body.map((p) => (
+              {s.body.filter((p): p is string => Boolean(p)).map((p) => (
                 <p key={p}>{p}</p>
               ))}
             </div>

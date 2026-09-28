@@ -43,9 +43,7 @@ export default function ContactPage() {
       <div className="mx-auto mt-12 grid max-w-5xl gap-12 md:grid-cols-2">
         <div className="flex flex-col gap-3">
           {channels.length === 0 && (
-            <p className="border border-dashed border-line p-6 text-sm text-muted">
-              [PLACEHOLDER] Configura WhatsApp, Instagram y email en las variables de entorno para mostrarlos aquí.
-            </p>
+            <p className="text-sm text-muted">Escríbenos con el formulario y te responderemos lo antes posible.</p>
           )}
           {channels.map(({ href, label, detail, Icon, external }) => (
             <a
@@ -63,7 +61,6 @@ export default function ContactPage() {
               </span>
             </a>
           ))}
-          <p className="mt-4 text-sm text-muted">Horario de atención: [PLACEHOLDER]</p>
         </div>
 
         <div>

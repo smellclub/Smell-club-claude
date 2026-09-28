@@ -22,10 +22,6 @@ const faqs = [
     q: "¿Qué tamaño elijo?",
     a: "5 ml es ideal para descubrir un perfume. 10 ml es perfecto si ya sabes que te gusta o para llevarlo de viaje.",
   },
-  {
-    q: "¿Cuántas pulverizaciones tiene?",
-    a: "[PLACEHOLDER] Indica aquí una estimación aproximada según tus atomizadores.",
-  },
 ];
 
 export default async function DecantsPage({ searchParams }: PageProps<"/decants">) {

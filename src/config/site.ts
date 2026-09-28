@@ -1,7 +1,7 @@
 /**
  * ============================================================
  *  CONTENIDO EDITABLE DE LA MARCA
- *  Todo lo marcado [PLACEHOLDER] debe revisarse antes de publicar.
+ *  Los campos vacíos ("") se ocultan automáticamente en la web.
  *  WhatsApp, Instagram, email y moneda se configuran en .env.local
  *  / Vercel (ver .env.example), no aquí.
  * ============================================================
@@ -39,35 +39,26 @@ export const siteConfig = {
       title: "Pedido sin complicaciones",
       text: "Haz tu pedido en un minuto y confirmamos contigo el pago y la entrega.",
     },
-    {
-      icon: "truck",
-      title: "Envíos [PLACEHOLDER]",
-      text: "[PLACEHOLDER] Indica aquí zonas, plazos y costes de envío reales.",
-    },
   ],
 
   /**
-   * Testimonios. ⚠️ Sustituye por reseñas REALES de clientes o deja el
-   * array vacío ([]) para ocultar la sección.
+   * Testimonios REALES de clientes. Vacío ([]) = sección oculta.
+   * Ejemplo: { name: "Laura M.", text: "Me encantó el decant de Khamrah", product: "Khamrah" }
    */
-  testimonials: [
-    { name: "[PLACEHOLDER] Cliente 1", text: "[PLACEHOLDER] Aquí irá un testimonio real de un cliente.", product: "" },
-    { name: "[PLACEHOLDER] Cliente 2", text: "[PLACEHOLDER] Aquí irá un testimonio real de un cliente.", product: "" },
-    { name: "[PLACEHOLDER] Cliente 3", text: "[PLACEHOLDER] Aquí irá un testimonio real de un cliente.", product: "" },
-  ] as Array<{ name: string; text: string; product: string }>,
+  testimonials: [] as Array<{ name: string; text: string; product: string }>,
 
-  /** Datos legales del titular (obligatorios en páginas legales). */
+  /** Datos legales del titular. Vacío = no se muestra esa línea. */
   legal: {
-    ownerName: "[PLACEHOLDER] Nombre o razón social",
-    taxId: "[PLACEHOLDER] NIF / CIF / RUT / RFC",
-    address: "[PLACEHOLDER] Dirección fiscal",
-    jurisdiction: "[PLACEHOLDER] País / jurisdicción",
-    lastUpdated: "[PLACEHOLDER] Fecha de última actualización",
+    ownerName: "", // Nombre o razón social
+    taxId: "", // NIF / CIF / RUT / RFC
+    address: "", // Dirección fiscal
+    jurisdiction: "", // País cuya legislación aplica
+    lastUpdated: "septiembre de 2026",
   },
 
   /** Texto informativo sobre envíos en el checkout. */
   shippingNote:
-    "El coste y el plazo de envío se confirman contigo al validar el pedido. [PLACEHOLDER: ajusta este texto]",
+    "El coste y el plazo de envío se confirman contigo al validar el pedido.",
 
   nav: [
     { label: "Tienda", href: "/shop" },
