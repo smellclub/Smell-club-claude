@@ -105,7 +105,7 @@ function HeroFeatured({
     >
       {aura ? (
         <div className={`relative ${frameClassName}`}>
-          <FeaturedAura image={featured.cutout} alt={`${featured.name} de ${featured.brand}`} />
+          <FeaturedAura image={featured.cutout} ratio={featured.cutoutRatio} alt={`${featured.name} de ${featured.brand}`} />
         </div>
       ) : (
         <div className={`relative overflow-hidden ${frameClassName} border border-gold/40 bg-white shadow-[0_30px_90px_-25px_rgba(197,162,90,0.55)] transition-shadow duration-500 group-hover:shadow-[0_30px_100px_-15px_rgba(197,162,90,0.7)]`}>

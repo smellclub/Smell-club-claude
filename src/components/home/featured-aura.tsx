@@ -11,17 +11,19 @@ import { useEffect, useRef } from "react";
  */
 
 type Ctx = CanvasRenderingContext2D;
-type Frame = { back: Ctx; front: Ctx; W: number; H: number; t: number };
+type Frame = { back: Ctx; front: Ctx; W: number; H: number; t: number; ratio: number };
 type Scene = (f: Frame) => void;
 
-/** Proporción de la foto recortada (ancho / alto) */
-const BOTTLE_RATIO = 312 / 500;
 /** Alto del frasco respecto a la caja */
-const BOTTLE_H = 0.62;
+const BOTTLE_H = 0.64;
 
-function geometry(W: number, H: number) {
+/**
+ * bw no es el ancho real del frasco sino el radio base de las cintas: en
+ * frascos muy finos se usa un mínimo para que la seda no quede pegada.
+ */
+function geometry(W: number, H: number, ratio: number) {
   const bh = H * BOTTLE_H;
-  const bw = bh * BOTTLE_RATIO;
+  const bw = Math.max(bh * ratio, bh * 0.5);
   return { cx: W / 2, cy: H / 2, bh, bw };
 }
 
@@ -42,8 +44,8 @@ const CHAMPAGNE = [150, 112, 58];
 const GOLD = [214, 172, 98];
 const IVORY = [252, 240, 212];
 
-function glowBehind(ctx: Ctx, W: number, H: number) {
-  const { cx, cy, bh } = geometry(W, H);
+function glowBehind(ctx: Ctx, W: number, H: number, ratio: number) {
+  const { cx, cy, bh } = geometry(W, H, ratio);
   const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, bh * 0.75);
   g.addColorStop(0, "rgba(197,162,90,0.22)");
   g.addColorStop(0.5, "rgba(197,162,90,0.07)");
@@ -55,9 +57,9 @@ function glowBehind(ctx: Ctx, W: number, H: number) {
 // ---------- Cintas de seda ----------
 function sedaScene(): Scene {
   const ribbons = [
-    { R: 1.08, flat: 0.3, roll: -0.22, yc: 0.64, speed: 0.3, len: 4.6, width: 0.034, phase: 0 },
-    { R: 1.22, flat: 0.24, roll: 0.16, yc: 0.34, speed: 0.24, len: 4.0, width: 0.024, phase: 2.2 },
-    { R: 0.95, flat: 0.34, roll: -0.05, yc: 0.86, speed: 0.36, len: 3.4, width: 0.018, phase: 4.1 },
+    { R: 1.08, flat: 0.3, roll: -0.22, yc: 0.58, speed: 0.3, len: 4.6, width: 0.034, phase: 0 },
+    { R: 1.22, flat: 0.24, roll: 0.16, yc: 0.2, speed: 0.24, len: 4.0, width: 0.024, phase: 2.2 },
+    { R: 0.95, flat: 0.34, roll: -0.05, yc: 0.7, speed: 0.36, len: 3.4, width: 0.018, phase: 4.1 },
   ];
   const N = 120;
   type P = { x: number; y: number; hw: number; z: number; light: number; spec: number; fade: number };
@@ -87,9 +89,9 @@ function sedaScene(): Scene {
     run.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y - p.hw) : ctx.moveTo(p.x, p.y - p.hw)));
     ctx.stroke();
   };
-  return ({ back, front, W, H, t }) => {
-    glowBehind(back, W, H);
-    const { cx, cy, bh, bw } = geometry(W, H);
+  return ({ back, front, W, H, t, ratio }) => {
+    glowBehind(back, W, H, ratio);
+    const { cx, cy, bh, bw } = geometry(W, H, ratio);
     for (const r of ribbons) {
       const head = r.phase + t * r.speed;
       const yc = cy - bh / 2 + bh * r.yc;
@@ -127,7 +129,7 @@ function sedaScene(): Scene {
   };
 }
 
-export function FeaturedAura({ image, alt }: { image: string; alt: string }) {
+export function FeaturedAura({ image, alt, ratio }: { image: string; alt: string; ratio: number }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const backRef = useRef<HTMLCanvasElement>(null);
   const frontRef = useRef<HTMLCanvasElement>(null);
@@ -157,7 +159,7 @@ export function FeaturedAura({ image, alt }: { image: string; alt: string }) {
         ctx.clearRect(0, 0, c.width, c.height);
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       }
-      scene({ back, front, W, H, t });
+      scene({ back, front, W, H, t, ratio });
     };
     const resize = () => {
       const r = wrap.getBoundingClientRect();
@@ -195,14 +197,14 @@ export function FeaturedAura({ image, alt }: { image: string; alt: string }) {
       ro.disconnect();
       io.disconnect();
     };
-  }, []);
+  }, [ratio]);
 
   return (
     <div ref={wrapRef} className="relative h-full w-full">
       <canvas ref={backRef} aria-hidden="true" className="absolute inset-0 h-full w-full" />
       <div
         className="absolute top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2 drop-shadow-[0_20px_40px_rgba(0,0,0,0.6)] transition-transform duration-700 ease-out group-hover:scale-[1.04]"
-        style={{ height: `${BOTTLE_H * 100}%`, aspectRatio: `${BOTTLE_RATIO}` }}
+        style={{ height: `${BOTTLE_H * 100}%`, aspectRatio: `${ratio}` }}
       >
         <Image src={image} alt={alt} fill priority sizes="(min-width: 768px) 20vw, 45vw" className="object-contain" />
       </div>

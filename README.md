@@ -235,9 +235,9 @@ Con Docker instalado puedes usar Supabase local: `npx supabase start` (aplica `m
 
 ## 11. Perfume destacado de la portada
 
-La portada muestra un perfume destacado (ahora **Khamrah de Lattafa**) recortado, sin fondo, envuelto en cintas de seda doradas que giran a su alrededor. Al tocarlo se abre su ficha.
+La portada muestra un perfume destacado (ahora **Liquid Brun de Fragrance World**) recortado, sin fondo, envuelto en cintas de seda doradas que giran a su alrededor. Al tocarlo se abre su ficha.
 
-La foto recortada está en `public/hero/khamrah.png` (PNG con fondo transparente). Si pones otra foto sin recortar, deja `cutout: ""` en `src/config/site.ts` y se mostrará en una vitrina con fondo blanco.
+La foto recortada está en `public/hero/liquid-brun.png` (PNG con fondo transparente) y `cutoutRatio` es su ancho dividido por su alto. Si pones otra foto sin recortar, deja `cutout: ""` en `src/config/site.ts` y se mostrará en una vitrina con fondo blanco.
 
 Para cambiarlo:
 

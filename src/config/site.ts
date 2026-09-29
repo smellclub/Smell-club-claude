@@ -26,16 +26,18 @@ export const siteConfig = {
      * Mejor una foto cuadrada o vertical de al menos 1000 px.
      */
     featured: {
-      image: "/products/khamrah.jpg",
+      image: "/hero/liquid-brun-original.jpg",
       /**
        * Misma foto recortada (PNG sin fondo). Si existe, se muestra con la
        * estela de seda dorada; si se deja vacía (""), se muestra la foto
        * normal en una vitrina con fondo blanco.
        */
-      cutout: "/hero/khamrah.png",
-      name: "Khamrah",
-      brand: "Lattafa",
-      href: "/product/khamrah",
+      cutout: "/hero/liquid-brun.png",
+      /** Proporción de la foto recortada: ancho / alto en píxeles */
+      cutoutRatio: 375 / 977,
+      name: "Liquid Brun",
+      brand: "Fragrance World",
+      href: "/product/liquid-brun",
     },
   },
 
