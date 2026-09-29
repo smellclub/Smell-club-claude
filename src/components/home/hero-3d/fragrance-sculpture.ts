@@ -27,9 +27,9 @@ type Strand = {
 };
 
 const STRANDS: Strand[] = [
-  { segmentsU: 300, segmentsV: 24, width: 0.17, radius: 1, phase: 0, timeOffset: 0, opacity: 0.95 },
-  { segmentsU: 220, segmentsV: 4, width: 0.012, radius: 1.22, phase: 0.55, timeOffset: 7, opacity: 0.6 },
-  { segmentsU: 220, segmentsV: 4, width: 0.008, radius: 0.82, phase: -0.4, timeOffset: 13, opacity: 0.5 },
+  { segmentsU: 440, segmentsV: 34, width: 0.17, radius: 1, phase: 0, timeOffset: 0, opacity: 0.95 },
+  { segmentsU: 320, segmentsV: 4, width: 0.012, radius: 1.22, phase: 0.55, timeOffset: 7, opacity: 0.6 },
+  { segmentsU: 320, segmentsV: 4, width: 0.008, radius: 0.82, phase: -0.4, timeOffset: 13, opacity: 0.5 },
 ];
 
 /** Hebras de la estela que cruza la pantalla (ancho relativo al tamaño del núcleo) */
@@ -43,9 +43,9 @@ type CrossStrand = {
 };
 
 const CROSS: CrossStrand[] = [
-  { segmentsU: 420, segmentsV: 18, width: 0.11, offset: 0, phase: 0, opacity: 0.9 },
-  { segmentsU: 320, segmentsV: 4, width: 0.01, offset: 0.07, phase: 1.7, opacity: 0.55 },
-  { segmentsU: 320, segmentsV: 4, width: 0.007, offset: -0.06, phase: 3.1, opacity: 0.45 },
+  { segmentsU: 680, segmentsV: 28, width: 0.11, offset: 0, phase: 0, opacity: 0.9 },
+  { segmentsU: 460, segmentsV: 4, width: 0.01, offset: 0.07, phase: 1.7, opacity: 0.55 },
+  { segmentsU: 460, segmentsV: 4, width: 0.007, offset: -0.06, phase: 3.1, opacity: 0.45 },
 ];
 
 /** Línea central orgánica del núcleo: S vertical suave + espiral abierta e irregular */
@@ -62,7 +62,7 @@ function centerline(u: number, t: number, s: Strand, out: THREE_NS.Vector3) {
   return out;
 }
 
-function makeSilkMaterial(THREE: Three, opacity: number) {
+function makeSilkMaterial(THREE: Three, opacity: number, fibers: number) {
   // Champán oscuro con reflejos: dorado sutil, nunca amarillo plano
   const mat = new THREE.MeshPhysicalMaterial({
     color: 0xa2855c,
@@ -80,11 +80,24 @@ function makeSilkMaterial(THREE: Three, opacity: number) {
   });
   mat.onBeforeCompile = (shader) => {
     shader.uniforms.uOpacity = { value: opacity };
+    shader.uniforms.uFibers = { value: fibers };
     shader.vertexShader = shader.vertexShader
       .replace("#include <common>", "#include <common>\nattribute vec2 aRib;\nvarying vec2 vRib;")
       .replace("#include <begin_vertex>", "#include <begin_vertex>\nvRib = aRib;");
     shader.fragmentShader = shader.fragmentShader
-      .replace("#include <common>", "#include <common>\nvarying vec2 vRib;\nuniform float uOpacity;")
+      .replace("#include <common>", "#include <common>\nvarying vec2 vRib;\nuniform float uOpacity;\nuniform float uFibers;")
+      // Detalle de seda: hebras finas a lo largo de la cinta (se atenúan
+      // cuando son más finas que un píxel para no generar parpadeos)
+      .replace(
+        "#include <roughnessmap_fragment>",
+        `#include <roughnessmap_fragment>
+        float fx = vRib.y * uFibers;
+        float fAA = clamp(1.0 - fwidth(fx) * 0.6, 0.0, 1.0);
+        float fiber = (0.5 + 0.5 * sin(fx * 6.2832 + sin(vRib.x * 40.0) * 0.6)) * fAA;
+        float weave = (0.5 + 0.5 * sin(vRib.y * uFibers * 0.37 * 6.2832 + vRib.x * 23.0)) * fAA;
+        roughnessFactor = clamp(roughnessFactor * (0.75 + 0.5 * fiber), 0.04, 1.0);
+        diffuseColor.rgb *= 0.9 + 0.1 * fiber + 0.06 * weave;`,
+      )
       .replace(
         "#include <dithering_fragment>",
         `// Bordes transparentes (a lo ancho y en los extremos) + brillo marfil en ángulos rasantes
@@ -186,10 +199,11 @@ export function createFragranceSculpture(THREE: Three, opts: { lowPower: boolean
 
   // ---------- Núcleo ----------
   const core = STRANDS.map((strand, idx) => {
-    const segmentsU = opts.lowPower ? Math.round(strand.segmentsU * 0.7) : strand.segmentsU;
-    const s = { ...strand, segmentsU };
+    const segmentsU = opts.lowPower ? Math.round(strand.segmentsU * 0.6) : strand.segmentsU;
+    const segmentsV = opts.lowPower ? Math.max(4, Math.round(strand.segmentsV * 0.7)) : strand.segmentsV;
+    const s = { ...strand, segmentsU, segmentsV };
     const { geo, pos } = makeRibbonGeometry(THREE, s.segmentsU, s.segmentsV);
-    const mat = makeSilkMaterial(THREE, s.opacity);
+    const mat = makeSilkMaterial(THREE, s.opacity, idx === 0 ? 60 : 4);
     const mesh = new THREE.Mesh(geo, mat);
     mesh.frustumCulled = false;
     mesh.renderOrder = idx === 0 ? 2 : 3;
@@ -203,11 +217,12 @@ export function createFragranceSculpture(THREE: Three, opts: { lowPower: boolean
   let path: THREE_NS.CatmullRomCurve3 | null = null;
   let pathScale = 1; // tamaño del núcleo en unidades de mundo
   const pathPts: THREE_NS.Vector3[] = [];
-  const cross = CROSS.map((c) => {
-    const segmentsU = opts.lowPower ? Math.round(c.segmentsU * 0.65) : c.segmentsU;
-    const s = { ...c, segmentsU };
+  const cross = CROSS.map((c, idx) => {
+    const segmentsU = opts.lowPower ? Math.round(c.segmentsU * 0.6) : c.segmentsU;
+    const segmentsV = opts.lowPower ? Math.max(4, Math.round(c.segmentsV * 0.7)) : c.segmentsV;
+    const s = { ...c, segmentsU, segmentsV };
     const { geo, pos } = makeRibbonGeometry(THREE, s.segmentsU, s.segmentsV);
-    const mat = makeSilkMaterial(THREE, s.opacity);
+    const mat = makeSilkMaterial(THREE, s.opacity, idx === 0 ? 48 : 4);
     const mesh = new THREE.Mesh(geo, mat);
     mesh.frustumCulled = false;
     mesh.renderOrder = 1;
@@ -223,7 +238,7 @@ export function createFragranceSculpture(THREE: Three, opts: { lowPower: boolean
     path = new THREE.CatmullRomCurve3(points, false, "centripetal", 0.5);
     pathScale = scale;
     // Muestreo por longitud de arco (se reutiliza cada fotograma)
-    const n = 600;
+    const n = 900;
     pathPts.length = 0;
     for (let i = 0; i <= n; i++) pathPts.push(path.getPointAt(i / n));
     cross.forEach((c) => (c.mesh.visible = true));

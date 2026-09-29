@@ -40,7 +40,10 @@ export function HeroScene() {
 
       // ---------- Renderer ----------
       const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // nitidez también en móvil
+      // Resolución: nítida (hasta 2x) y se ajusta sola si el equipo va lento
+      const maxRatio = Math.min(window.devicePixelRatio || 1, isSmall ? 2 : 2.5);
+      let pixelRatio = maxRatio;
+      renderer.setPixelRatio(pixelRatio);
       renderer.setClearColor(0x0a0a0a, 1);
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       renderer.toneMappingExposure = 1.0;
@@ -50,7 +53,7 @@ export function HeroScene() {
 
       const scene = new THREE.Scene();
       const pmrem = new THREE.PMREMGenerator(renderer);
-      const envTexture = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+      const envTexture = pmrem.fromScene(new RoomEnvironment(), 0.02).texture;
       scene.environment = envTexture;
       scene.environmentIntensity = 0.55; // reflejos sutiles, no espejo
 
@@ -99,14 +102,21 @@ export function HeroScene() {
       scene.add(rim.target);
 
       // ---------- Bloom muy controlado (solo escritorio) ----------
-      let composer: { render(): void; setSize(w: number, h: number): void; dispose(): void } | null = null;
+      let composer: {
+        render(): void;
+        setSize(w: number, h: number): void;
+        setPixelRatio(r: number): void;
+        dispose(): void;
+      } | null = null;
       if (!isSmall) {
         const { EffectComposer } = await import("three/examples/jsm/postprocessing/EffectComposer.js");
         const { RenderPass } = await import("three/examples/jsm/postprocessing/RenderPass.js");
         const { UnrealBloomPass } = await import("three/examples/jsm/postprocessing/UnrealBloomPass.js");
         const { OutputPass } = await import("three/examples/jsm/postprocessing/OutputPass.js");
         if (disposed) return;
-        const c = new EffectComposer(renderer);
+        // Render target con MSAA: sin él, el post-proceso pierde el antialiasing
+        const rt = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: 4 });
+        const c = new EffectComposer(renderer, rt);
         c.addPass(new RenderPass(scene, camera));
         c.addPass(new UnrealBloomPass(new THREE.Vector2(512, 512), 0.14, 0.35, 0.9));
         c.addPass(new OutputPass());
@@ -196,6 +206,33 @@ export function HeroScene() {
       const io = new IntersectionObserver(([entry]) => (visible = entry.isIntersecting), { threshold: 0 });
       io.observe(mount);
 
+      // Calidad adaptativa: mide ~2 s de fotogramas; si va lento baja la
+      // resolución por pasos (nunca por debajo de 1x) y, en último caso, el bloom.
+      let sampleStart = 0;
+      let sampleFrames = 0;
+      let checks = 0;
+      const adapt = (now: number) => {
+        if (checks >= 6) return;
+        if (!sampleStart) sampleStart = now;
+        sampleFrames++;
+        const span = now - sampleStart;
+        if (span < 2000) return;
+        const fps = (sampleFrames * 1000) / span;
+        sampleStart = 0;
+        sampleFrames = 0;
+        checks++;
+        if (fps >= 45) return;
+        if (pixelRatio > 1) {
+          pixelRatio = Math.max(1, pixelRatio - 0.5);
+          renderer.setPixelRatio(pixelRatio);
+          composer?.setPixelRatio(pixelRatio);
+          place();
+        } else if (composer) {
+          composer.dispose();
+          composer = null;
+        }
+      };
+
       let raf = 0;
       let elapsed = 0;
       let last = performance.now();
@@ -207,6 +244,7 @@ export function HeroScene() {
         elapsed += dt;
         sculpture.update(elapsed);
         draw();
+        adapt(now);
       };
 
       if (reduceMotion) {
