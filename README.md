@@ -233,6 +233,13 @@ Con Docker instalado puedes usar Supabase local: `npx supabase start` (aplica `m
 - [ ] Prueba la web en iPhone y Android, incluido abrir un enlace desde Instagram.
 - [ ] Supabase: revisa las copias de seguridad de tu plan (Database → Backups).
 
-## 11. Humo dorado de la portada
+## 11. Perfume destacado de la portada
 
-La portada muestra humo dorado translúcido que sube junto al título, con una estela de humo que cruza la pantalla y pequeños destellos. Se genera por código (shaders), sin archivos 3D externos. Se configura en `src/components/home/hero-3d/golden-smoke.ts` (colores, velocidad, opacidad) y su recorrido en `src/components/home/hero-scene.tsx`.
+La portada muestra un perfume destacado (ahora **Khamrah de Lattafa**) en una vitrina con marco dorado. Al tocarlo se abre su ficha.
+
+Para cambiarlo:
+
+1. Sube la foto nueva a la carpeta `public/products/` (mejor cuadrada o vertical, de al menos 1000 px y con fondo blanco).
+2. Abre `src/config/site.ts` y busca `featured`.
+3. Cambia `image` (ruta de la foto, por ejemplo `/products/9pm.jpg`), `name`, `brand` y `href` (el enlace a la ficha, por ejemplo `/product/9pm-night-out`).
+4. Guarda y sube el cambio: Vercel actualiza la página sola.

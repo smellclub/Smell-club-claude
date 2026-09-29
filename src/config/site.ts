@@ -20,6 +20,17 @@ export const siteConfig = {
       "Fragancias seleccionadas y decants de 5 y 10 ml para que pruebes antes de decidir.",
     primaryCta: { label: "Explorar colección", href: "/shop" },
     secondaryCta: { label: "Probar con decants", href: "/decants" },
+    /**
+     * Perfume destacado en la portada. Para cambiarlo, sube la foto a
+     * public/products/ (o public/hero/) y cambia estos datos.
+     * Mejor una foto cuadrada o vertical de al menos 1000 px.
+     */
+    featured: {
+      image: "/products/khamrah.jpg",
+      name: "Khamrah",
+      brand: "Lattafa",
+      href: "/product/khamrah",
+    },
   },
 
   /** Beneficios: solo afirmaciones que el negocio pueda cumplir. Revísalos. */

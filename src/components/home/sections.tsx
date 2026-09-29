@@ -1,6 +1,6 @@
+import Image from "next/image";
 import Link from "next/link";
 import { siteConfig } from "@/config/site";
-import { HeroScene } from "@/components/home/hero-scene";
 import { HeroTitle } from "@/components/home/hero-title";
 import { ProductRail } from "@/components/product/product-card";
 import { ButtonLink } from "@/components/ui/button";
@@ -26,13 +26,10 @@ export function Hero() {
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_50%_60%,rgba(197,162,90,0.18),transparent_55%),radial-gradient(ellipse_at_50%_0%,rgba(197,162,90,0.12),transparent_50%)] md:bg-[radial-gradient(ellipse_at_72%_55%,rgba(197,162,90,0.2),transparent_50%),radial-gradient(ellipse_at_20%_0%,rgba(197,162,90,0.1),transparent_50%)]"
       />
-      <HeroScene />
-      {/* Zona de la escultura 3D en escritorio (derecha, fuera del texto) */}
-      <div
-        data-hero-anchor
-        aria-hidden="true"
-        className="pointer-events-none absolute top-[14%] right-[6%] bottom-[14%] hidden w-[36%] md:block"
-      />
+      {/* Perfume destacado en escritorio (derecha, fuera del texto) */}
+      <div className="absolute top-[14%] right-[6%] bottom-[14%] z-20 hidden w-[36%] items-center justify-center md:flex">
+        <HeroFeatured className="aspect-[4/6] h-full max-h-[600px]" frameClassName="w-full min-h-0 flex-1" />
+      </div>
       <div aria-hidden="true" className="pointer-events-none absolute inset-x-5 top-5 bottom-5 z-10 border border-gold/15 sm:inset-x-8" />
 
       {/* Efecto de apertura */}
@@ -51,8 +48,10 @@ export function Hero() {
           </p>
         </div>
 
-        {/* Espacio para la escultura 3D en móvil (entre el texto y los botones) */}
-        <div data-hero-anchor aria-hidden="true" className="my-4 min-h-[36svh] flex-1 md:hidden" />
+        {/* Perfume destacado en móvil (entre el texto y los botones) */}
+        <div className="my-8 flex flex-1 items-center justify-center md:hidden">
+          <HeroFeatured className="w-[68%] max-w-[260px]" frameClassName="w-full aspect-[4/5]" />
+        </div>
 
         <div className="md:mt-8 md:max-w-[50%]">
           <p className="animate-fade-up mx-auto max-w-md text-sm leading-relaxed text-ivory/70 [animation-delay:1450ms] sm:text-base md:mx-0">
@@ -74,6 +73,36 @@ export function Hero() {
         <span className="block h-10 w-px bg-gold/70 [animation:hero-scroll_2s_ease-in-out_infinite]" />
       </div>
     </section>
+  );
+}
+
+/** Vitrina del perfume destacado: foto sobre fondo claro con marco dorado */
+function HeroFeatured({ className = "", frameClassName = "" }: { className?: string; frameClassName?: string }) {
+  const { featured } = siteConfig.hero;
+  return (
+    <Link
+      href={featured.href}
+      className={`group animate-fade-up flex max-w-full flex-col items-center [animation-delay:1500ms] ${className}`}
+      aria-label={`Ver ${featured.name} de ${featured.brand}`}
+    >
+      <div className={`relative overflow-hidden ${frameClassName} border border-gold/40 bg-white shadow-[0_30px_90px_-25px_rgba(197,162,90,0.55)] transition-shadow duration-500 group-hover:shadow-[0_30px_100px_-15px_rgba(197,162,90,0.7)]`}>
+        <Image
+          src={featured.image}
+          alt={`${featured.name} de ${featured.brand}`}
+          fill
+          priority
+          sizes="(min-width: 768px) 36vw, 70vw"
+          className="scale-[1.12] object-contain p-2 transition-transform duration-700 ease-out group-hover:scale-[1.17]"
+        />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-2 border border-gold/25" />
+      </div>
+      <p className="mt-4 text-center">
+        <span className="eyebrow block text-[0.6rem] text-gold">Destacado</span>
+        <span className="mt-1 block font-display text-xl text-ivory">
+          {featured.name} <span className="text-ivory/60 italic">· {featured.brand}</span>
+        </span>
+      </p>
+    </Link>
   );
 }
 
