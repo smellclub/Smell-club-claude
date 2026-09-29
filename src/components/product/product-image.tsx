@@ -13,6 +13,7 @@ export function ProductImage({
   sizes = "(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw",
   priority = false,
   className,
+  padded = true,
 }: {
   src: string | null;
   alt: string;
@@ -21,6 +22,8 @@ export function ProductImage({
   sizes?: string;
   priority?: boolean;
   className?: string;
+  /** Muestra el frasco completo (sin recortar) con margen sobre fondo blanco */
+  padded?: boolean;
 }) {
   if (!src) {
     return (
@@ -41,14 +44,17 @@ export function ProductImage({
     );
   }
 
+  if (!padded) {
+    return <Image src={src} alt={alt} fill sizes={sizes} priority={priority} className={cn("object-cover", className)} />;
+  }
+
+  // Fotos de producto (a menudo pequeñas y cuadradas): se muestran enteras,
+  // centradas y sin ampliarse de más, para que se vean nítidas.
   return (
-    <Image
-      src={src}
-      alt={alt}
-      fill
-      sizes={sizes}
-      priority={priority}
-      className={cn("object-cover", className)}
-    />
+    <div className={cn("relative h-full w-full bg-white", className)}>
+      <div className="absolute inset-[10%]">
+        <Image src={src} alt={alt} fill sizes={sizes} priority={priority} className="object-contain mix-blend-multiply" />
+      </div>
+    </div>
   );
 }

@@ -59,7 +59,7 @@ export function CartView() {
               <li key={item.variantId} className="flex gap-4 py-5">
                 <Link href={`/product/${item.slug}`} className="relative aspect-[4/5] w-20 shrink-0 overflow-hidden bg-ink sm:w-24">
                   {item.image ? (
-                    <Image src={item.image} alt="" fill sizes="96px" className="object-cover" />
+                    <Image src={item.image} alt="" fill sizes="96px" className="bg-white object-contain p-1.5" />
                   ) : (
                     <span className="flex h-full items-center justify-center p-2 text-center font-display text-xs text-ivory/80">
                       {item.name}

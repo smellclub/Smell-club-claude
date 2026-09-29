@@ -11,7 +11,7 @@ export function ProductGallery({ images, name, brand }: { images: ProductImageTy
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="relative aspect-[4/5] w-full overflow-hidden bg-sand">
+      <div className="relative mx-auto aspect-square w-full max-w-xl overflow-hidden bg-white ring-1 ring-line/60">
         <ProductImage
           src={current?.url ?? null}
           alt={current?.alt ?? `${name} de ${brand}`}

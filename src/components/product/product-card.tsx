@@ -28,7 +28,7 @@ export function ProductCard({
   return (
     <article className="group relative flex flex-col">
       <Link href={`/product/${product.slug}`} className="flex flex-col gap-4" aria-label={`${product.name} de ${product.brand}`}>
-        <div className="relative aspect-[4/5] overflow-hidden bg-sand">
+        <div className="relative aspect-[4/5] overflow-hidden bg-white ring-1 ring-line/60">
           <div className="h-full w-full transition-transform duration-700 ease-out group-hover:scale-[1.04]">
             <ProductImage
               src={image?.url ?? null}
