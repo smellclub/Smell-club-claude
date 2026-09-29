@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 
 /**
- * Escena 3D del hero: frasco de Afnan 9PM Night Out (cristal negro moteado,
- * "9" plateado, tapón esférico facetado) y partículas doradas (bruma).
+ * Escena 3D del hero: gota de oro líquido que ondula como metal fundido,
+ * dos anillos dorados en órbita y partículas doradas (bruma de perfume).
  * - three.js se carga bajo demanda (no bloquea la primera pintura).
  * - Se pausa fuera de pantalla / pestaña oculta.
  * - Respeta "reducir movimiento" (un único fotograma estático).
@@ -66,169 +66,106 @@ export function HeroScene() {
       glow.position.set(0, 0.1, -4);
       scene.add(glow);
 
-      // ---------- Frasco: Afnan 9PM Night Out ----------
-      // Frasco plano rectangular con hombros redondeados, cristal negro
-      // moteado (efecto granito), gran "9" plateado y tapón esférico facetado.
+      // ---------- Gota de oro líquido + anillos orbitales ----------
+      // La esfera se deforma en la GPU con ruido (oro fundido en movimiento).
       const bottle = new THREE.Group();
       scene.add(bottle);
 
-      const bodyFont =
-        getComputedStyle(document.documentElement).getPropertyValue("--font-inter").trim() || "Arial, sans-serif";
-      const displayFont =
-        getComputedStyle(document.documentElement).getPropertyValue("--font-cormorant").trim() || "Georgia, serif";
-      await Promise.all([
-        document.fonts.load(`600 100px ${displayFont}`),
-        document.fonts.load(`500 100px ${bodyFont}`),
-        document.fonts.load(`italic 500 100px ${displayFont}`),
-      ]).catch(() => undefined);
-      if (disposed) return;
-
-      // Textura moteada (granito oscuro con destellos)
-      const speckCanvas = document.createElement("canvas");
-      speckCanvas.width = speckCanvas.height = 512;
-      const sc = speckCanvas.getContext("2d")!;
-      sc.fillStyle = "#121214";
-      sc.fillRect(0, 0, 512, 512);
-      for (let i = 0; i < 7000; i++) {
-        const v = Math.random();
-        const shade = v < 0.7 ? 18 + Math.random() * 18 : v < 0.95 ? 45 + Math.random() * 35 : 150 + Math.random() * 100;
-        sc.fillStyle = `rgba(${shade},${shade},${shade + 3},${0.3 + Math.random() * 0.6})`;
-        const r = Math.random() < 0.92 ? 0.5 + Math.random() * 1 : 1.4 + Math.random() * 1.4;
-        sc.beginPath();
-        sc.arc(Math.random() * 512, Math.random() * 512, r, 0, Math.PI * 2);
-        sc.fill();
-      }
-      const speckTex = new THREE.CanvasTexture(speckCanvas);
-      speckTex.colorSpace = THREE.SRGBColorSpace;
-      speckTex.wrapS = speckTex.wrapT = THREE.RepeatWrapping;
-      speckTex.repeat.set(1.4, 1.4);
-      const bumpTex = new THREE.CanvasTexture(speckCanvas);
-      bumpTex.wrapS = bumpTex.wrapT = THREE.RepeatWrapping;
-      bumpTex.repeat.set(1.4, 1.4);
-
-      const W = 1.2;
-      const H = 1.72;
-      const D = 0.42;
-      const shoulder = 0.34;
-      const foot = 0.08;
-      const shape = new THREE.Shape();
-      shape.moveTo(-W / 2 + foot, -H / 2);
-      shape.lineTo(W / 2 - foot, -H / 2);
-      shape.quadraticCurveTo(W / 2, -H / 2, W / 2, -H / 2 + foot);
-      shape.lineTo(W / 2, H / 2 - shoulder);
-      shape.quadraticCurveTo(W / 2, H / 2, W / 2 - shoulder, H / 2);
-      shape.lineTo(-W / 2 + shoulder, H / 2);
-      shape.quadraticCurveTo(-W / 2, H / 2, -W / 2, H / 2 - shoulder);
-      shape.lineTo(-W / 2, -H / 2 + foot);
-      shape.quadraticCurveTo(-W / 2, -H / 2, -W / 2 + foot, -H / 2);
-      const bevel = 0.05;
-      const bodyGeo = new THREE.ExtrudeGeometry(shape, {
-        depth: D - bevel * 2,
-        bevelEnabled: true,
-        bevelThickness: bevel,
-        bevelSize: bevel,
-        bevelSegments: 6,
-        curveSegments: 24,
+      const goldLiquid = new THREE.MeshPhysicalMaterial({
+        color: 0xd9b46a,
+        metalness: 1,
+        roughness: 0.16,
+        clearcoat: 0.7,
+        clearcoatRoughness: 0.08,
+        envMapIntensity: 1.7,
       });
-      bodyGeo.translate(0, 0, -(D - bevel * 2) / 2);
-      const granite = new THREE.MeshPhysicalMaterial({
-        color: 0xffffff,
-        map: speckTex,
-        bumpMap: bumpTex,
-        bumpScale: 0.6,
-        metalness: 0.2,
-        roughness: 0.45,
-        clearcoat: 1,
-        clearcoatRoughness: 0.05,
-        envMapIntensity: 1.1,
-      });
-      const body = new THREE.Mesh(bodyGeo, granite);
-      bottle.add(body);
+      const blobUniforms = { uTime: { value: 0 } };
+      goldLiquid.onBeforeCompile = (shader) => {
+        shader.uniforms.uTime = blobUniforms.uTime;
+        shader.vertexShader = shader.vertexShader
+          .replace(
+            "#include <common>",
+            `#include <common>
+            uniform float uTime;
+            // Simplex 3D noise (Ashima Arts, licencia MIT)
+            vec4 permute(vec4 x){ return mod(((x*34.0)+1.0)*x, 289.0); }
+            vec4 taylorInvSqrt(vec4 r){ return 1.79284291400159 - 0.85373472095314 * r; }
+            float snoise(vec3 v){
+              const vec2 C = vec2(1.0/6.0, 1.0/3.0);
+              const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
+              vec3 i = floor(v + dot(v, C.yyy));
+              vec3 x0 = v - i + dot(i, C.xxx);
+              vec3 g = step(x0.yzx, x0.xyz);
+              vec3 l = 1.0 - g;
+              vec3 i1 = min(g.xyz, l.zxy);
+              vec3 i2 = max(g.xyz, l.zxy);
+              vec3 x1 = x0 - i1 + C.xxx;
+              vec3 x2 = x0 - i2 + 2.0 * C.xxx;
+              vec3 x3 = x0 - 1.0 + 3.0 * C.xxx;
+              i = mod(i, 289.0);
+              vec4 p = permute(permute(permute(i.z + vec4(0.0, i1.z, i2.z, 1.0)) + i.y + vec4(0.0, i1.y, i2.y, 1.0)) + i.x + vec4(0.0, i1.x, i2.x, 1.0));
+              float n_ = 1.0/7.0;
+              vec3 ns = n_ * D.wyz - D.xzx;
+              vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
+              vec4 x_ = floor(j * ns.z);
+              vec4 y_ = floor(j - 7.0 * x_);
+              vec4 x = x_ * ns.x + ns.yyyy;
+              vec4 y = y_ * ns.x + ns.yyyy;
+              vec4 h = 1.0 - abs(x) - abs(y);
+              vec4 b0 = vec4(x.xy, y.xy);
+              vec4 b1 = vec4(x.zw, y.zw);
+              vec4 s0 = floor(b0) * 2.0 + 1.0;
+              vec4 s1 = floor(b1) * 2.0 + 1.0;
+              vec4 sh = -step(h, vec4(0.0));
+              vec4 a0 = b0.xzyw + s0.xzyw * sh.xxyy;
+              vec4 a1 = b1.xzyw + s1.xzyw * sh.zzww;
+              vec3 p0 = vec3(a0.xy, h.x);
+              vec3 p1 = vec3(a0.zw, h.y);
+              vec3 p2 = vec3(a1.xy, h.z);
+              vec3 p3 = vec3(a1.zw, h.w);
+              vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2,p2), dot(p3,p3)));
+              p0 *= norm.x; p1 *= norm.y; p2 *= norm.z; p3 *= norm.w;
+              vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+              m = m * m;
+              return 42.0 * dot(m*m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));
+            }
+            vec3 displaceBlob(vec3 p){
+              float n = snoise(p * 0.85 + vec3(0.0, uTime * 0.3, uTime * 0.18)) * 0.13
+                      + snoise(p * 1.7 - vec3(uTime * 0.22)) * 0.025;
+              return p + normalize(p) * n;
+            }`,
+          )
+          .replace(
+            "#include <beginnormal_vertex>",
+            `vec3 bnPos = displaceBlob(position);
+            vec3 bnT = normalize(cross(normal, abs(normal.y) < 0.99 ? vec3(0.0,1.0,0.0) : vec3(1.0,0.0,0.0)));
+            vec3 bnB = normalize(cross(normal, bnT));
+            float bnE = 0.01;
+            vec3 bnA = displaceBlob(position + bnT * bnE);
+            vec3 bnC = displaceBlob(position + bnB * bnE);
+            vec3 objectNormal = normalize(cross(bnA - bnPos, bnC - bnPos));
+            if (dot(objectNormal, normal) < 0.0) objectNormal = -objectNormal;
+            #ifdef USE_TANGENT
+              vec3 objectTangent = vec3(tangent.xyz);
+            #endif`,
+          )
+          .replace("#include <begin_vertex>", "vec3 transformed = bnPos;");
+      };
+      const blob = new THREE.Mesh(new THREE.IcosahedronGeometry(0.92, isSmall ? 48 : 72), goldLiquid);
+      bottle.add(blob);
 
-      // Etiqueta frontal: gran "9" plateado, "pm" vertical, "Night Out", AFNAN
-      const labelCanvas = document.createElement("canvas");
-      labelCanvas.width = 640;
-      labelCanvas.height = 920;
-      const lc = labelCanvas.getContext("2d")!;
-      lc.clearRect(0, 0, 640, 920);
-      const silver = lc.createLinearGradient(0, 80, 0, 760);
-      silver.addColorStop(0, "#f4f1ea");
-      silver.addColorStop(0.45, "#cfcac0");
-      silver.addColorStop(0.55, "#9d978d");
-      silver.addColorStop(1, "#e7e3da");
-      lc.fillStyle = silver;
-      lc.textAlign = "center";
-      lc.textBaseline = "alphabetic";
-      // "9" alto (cifra de caja alta, estirada verticalmente como en el frasco)
-      lc.save();
-      lc.translate(340, 640);
-      lc.scale(1.05, 1.45);
-      lc.font = `500 440px ${bodyFont}`;
-      lc.fillText("9", 0, 0);
-      lc.restore();
-      lc.save();
-      lc.translate(205, 470);
-      lc.rotate(-Math.PI / 2);
-      lc.font = `italic 500 96px ${displayFont}`;
-      lc.fillText("pm", 0, 0);
-      lc.restore();
-      lc.font = `italic 500 78px ${displayFont}`;
-      lc.fillText("Night Out", 320, 735);
-      lc.fillStyle = "#d8d3c9";
-      lc.font = `600 34px ${displayFont}`;
-      if ("letterSpacing" in lc) (lc as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = "10px";
-      lc.fillText("AFNAN", 320, 810);
-      lc.font = `500 20px ${displayFont}`;
-      lc.fillText("EAU DE PARFUM", 320, 850);
-      const labelTex = new THREE.CanvasTexture(labelCanvas);
-      labelTex.colorSpace = THREE.SRGBColorSpace;
-      labelTex.anisotropy = 8;
-      const labelMat = new THREE.MeshStandardMaterial({
-        map: labelTex,
-        transparent: true,
-        metalness: 0.85,
-        roughness: 0.28,
+      const ringMat = new THREE.MeshStandardMaterial({
+        color: 0xe3cc93,
+        metalness: 1,
+        roughness: 0.22,
+        emissive: new THREE.Color(0x3a2a0a),
         envMapIntensity: 1.8,
       });
-      const label = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 1.3), labelMat);
-      label.position.set(0, -0.12, D / 2 + 0.002);
-      bottle.add(label);
-      const labelBack = label.clone();
-      labelBack.position.z = -(D / 2 + 0.002);
-      labelBack.rotation.y = Math.PI;
-      bottle.add(labelBack);
-
-      // Cuello y tapón esférico facetado (metal oscuro)
-      const gunmetal = new THREE.MeshStandardMaterial({
-        color: 0x3b3b3e,
-        metalness: 0.9,
-        roughness: 0.35,
-        bumpMap: bumpTex,
-        bumpScale: 0.4,
-        envMapIntensity: 1.6,
-      });
-      const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.16, 0.14, 32), gunmetal);
-      neck.position.y = H / 2 + 0.06;
-      bottle.add(neck);
-      const cap = new THREE.Mesh(
-        new THREE.SphereGeometry(0.27, 40, 28),
-        new THREE.MeshPhysicalMaterial({
-          color: 0xffffff,
-          map: speckTex,
-          bumpMap: bumpTex,
-          bumpScale: 0.8,
-          metalness: 0.45,
-          roughness: 0.4,
-          clearcoat: 0.8,
-          clearcoatRoughness: 0.15,
-          envMapIntensity: 1.3,
-        }),
-      );
-      cap.position.y = H / 2 + 0.36;
-      bottle.add(cap);
-      bottle.position.y = 0;
-      // Centra el conjunto verticalmente
-      bottle.children.forEach((c) => (c.position.y -= 0.2));
+      const ring1 = new THREE.Mesh(new THREE.TorusGeometry(1.42, 0.014, 16, 220), ringMat);
+      ring1.rotation.set(Math.PI / 2.3, 0.35, 0);
+      const ring2 = new THREE.Mesh(new THREE.TorusGeometry(1.68, 0.008, 16, 260), ringMat);
+      ring2.rotation.set(Math.PI / 1.7, -0.5, 0.4);
+      bottle.add(ring1, ring2);
 
       // ---------- Luces ----------
       scene.add(new THREE.AmbientLight(0xffffff, 0.25));
@@ -287,9 +224,9 @@ export function HeroScene() {
         renderer.setSize(w, h, false);
         camera.aspect = w / h;
         const portrait = w / h < 1;
-        layout.x = portrait ? 0 : Math.min(1.9, (w / h) * 0.95);
-        layout.y = portrait ? 0.02 : -0.3;
-        layout.s = portrait ? 0.46 : 0.9;
+        layout.x = portrait ? 0 : Math.min(1.7, (w / h) * 0.9);
+        layout.y = portrait ? 0.12 : 0.05;
+        layout.s = portrait ? 0.5 : 0.85;
         glow.position.x = layout.x;
         camera.position.set(0, 0.15, portrait ? 8.6 : 7);
         camera.lookAt(0, 0.1, 0);
@@ -331,8 +268,12 @@ export function HeroScene() {
         bottle.scale.setScalar(layout.s * (0.55 + 0.45 * intro));
         bottle.position.x = layout.x;
         bottle.position.y = layout.y + (1 - intro) * -1.2 + Math.sin(t * 1.1) * 0.07;
-        bottle.rotation.y = t * 0.45 + (1 - intro) * -2.4 + pointer.x * 0.5;
+        bottle.rotation.y = t * 0.25 + (1 - intro) * -2.4 + pointer.x * 0.5;
         bottle.rotation.x = pointer.y * 0.18 + Math.sin(t * 0.7) * 0.03;
+        blobUniforms.uTime.value = t;
+        ring1.rotation.z += dt * 0.35;
+        ring2.rotation.z -= dt * 0.22;
+        ring2.rotation.x += dt * 0.05;
         bottle.rotation.z = -pointer.x * 0.06;
 
         camera.position.x = pointer.x * 0.35;
