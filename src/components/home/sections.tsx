@@ -1,9 +1,6 @@
 import Link from "next/link";
 import { siteConfig } from "@/config/site";
-import { existsSync } from "node:fs";
-import { join } from "node:path";
 import { HeroScene } from "@/components/home/hero-scene";
-import { heroModel } from "@/config/hero-model";
 import { HeroTitle } from "@/components/home/hero-title";
 import { ProductRail } from "@/components/product/product-card";
 import { ButtonLink } from "@/components/ui/button";
@@ -22,8 +19,6 @@ import type { Category, Product } from "@/types/domain";
 
 export function Hero() {
   const { hero } = siteConfig;
-  // El modelo real de Liquid Brun se usa si existe el archivo (ver src/config/hero-model.ts)
-  const hasModel = existsSync(join(process.cwd(), "public", heroModel.path));
   return (
     <section className="relative isolate overflow-hidden bg-ink text-ivory">
       {/* Fondo base (visible también sin WebGL) */}
@@ -31,8 +26,8 @@ export function Hero() {
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_50%_60%,rgba(197,162,90,0.18),transparent_55%),radial-gradient(ellipse_at_50%_0%,rgba(197,162,90,0.12),transparent_50%)] md:bg-[radial-gradient(ellipse_at_72%_55%,rgba(197,162,90,0.2),transparent_50%),radial-gradient(ellipse_at_20%_0%,rgba(197,162,90,0.1),transparent_50%)]"
       />
-      <HeroScene hasModel={hasModel} />
-      {/* Zona donde se coloca el frasco en escritorio (derecha) */}
+      <HeroScene />
+      {/* Zona de la escultura 3D en escritorio (derecha, fuera del texto) */}
       <div
         data-hero-anchor
         aria-hidden="true"
@@ -56,7 +51,7 @@ export function Hero() {
           </p>
         </div>
 
-        {/* Espacio para el frasco 3D en móvil (entre el texto y los botones) */}
+        {/* Espacio para la escultura 3D en móvil (entre el texto y los botones) */}
         <div data-hero-anchor aria-hidden="true" className="my-4 min-h-[36svh] flex-1 md:hidden" />
 
         <div className="md:mt-8 md:max-w-[50%]">

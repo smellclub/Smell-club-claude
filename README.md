@@ -233,14 +233,6 @@ Con Docker instalado puedes usar Supabase local: `npx supabase start` (aplica `m
 - [ ] Prueba la web en iPhone y Android, incluido abrir un enlace desde Instagram.
 - [ ] Supabase: revisa las copias de seguridad de tu plan (Database → Backups).
 
-## 11. Modelo 3D de la portada (Liquid Brun)
+## 11. Escultura 3D de la portada
 
-La portada muestra un frasco 3D girando con una estela de fragancia. **El modelo real de Liquid Brun todavía no está en el proyecto**: mientras tanto se ve un frasco provisional genérico (sin marca).
-
-Para poner el modelo real:
-1. Consigue el archivo **.glb** del frasco de Liquid Brun (de un modelador 3D o del distribuidor).
-2. En GitHub, entra en la carpeta **public/models** → **Add file** → **Upload files**.
-3. Arrastra el archivo y asegúrate de que se llama exactamente **liquid-brun.glb**.
-4. Pulsa **Commit changes**. Vercel vuelve a publicar solo y la portada usa el modelo real.
-
-Si el modelo aparece girado o tumbado, ajusta los grados en `src/config/hero-model.ts`.
+La portada muestra una escultura abstracta de "fragancia en el aire" (cinta de seda / vapor dorado) generada por código, sin archivos 3D externos. Se configura en `src/components/home/hero-3d/fragrance-sculpture.ts` (forma, colores, velocidad).

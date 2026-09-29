@@ -2,22 +2,19 @@
 
 import { useEffect, useRef, useState } from "react";
 import type * as T from "three";
-import { heroModel } from "@/config/hero-model";
 
 /**
- * Escena 3D del hero: frasco de producto (Liquid Brun) girando sobre su eje
- * vertical con una estela de fragancia tipo seda alrededor.
+ * Escena 3D del hero: "escultura de fragancia" abstracta (seda, vapor,
+ * líquido y luz dorada) suspendida a la derecha del título.
  *
- * - Si existe public/models/liquid-brun.glb (hasModel) se carga con GLTFLoader
- *   (admite Draco y Meshopt). Si no, se muestra un PLACEHOLDER genérico sin marca.
- * - Cámara FIJA (sin zoom ni movimiento). Solo gira el frasco: 360° cada
- *   `secondsPerTurn` s, velocidad constante, y flota ±`floatPx` px.
- * - El frasco se coloca sobre el elemento [data-hero-anchor] visible:
- *   a la derecha en escritorio y bajo el texto en móvil (nunca sobre botones).
+ * - La forma se genera por código en ./hero-3d/fragrance-sculpture.ts.
+ * - Cámara FIJA. Solo la escultura gira y se deforma, muy despacio.
+ * - Se coloca sobre el elemento [data-hero-anchor] visible (derecha en
+ *   escritorio, entre el texto en móvil) y nunca tapa textos ni botones.
  * - three.js se carga bajo demanda, se pausa fuera de pantalla y respeta
  *   "reducir movimiento".
  */
-export function HeroScene({ hasModel }: { hasModel: boolean }) {
+export function HeroScene() {
   const mountRef = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
 
@@ -34,7 +31,7 @@ export function HeroScene({ hasModel }: { hasModel: boolean }) {
 
       const THREE = await import("three");
       const { RoomEnvironment } = await import("three/examples/jsm/environments/RoomEnvironment.js");
-      const { createFragranceTrail } = await import("./hero-3d/fragrance-trail");
+      const { createFragranceSculpture } = await import("./hero-3d/fragrance-sculpture");
       if (disposed) return;
 
       const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -56,22 +53,22 @@ export function HeroScene({ hasModel }: { hasModel: boolean }) {
       scene.environment = envTexture;
       scene.environmentIntensity = 0.55; // reflejos sutiles, no espejo
 
-      // ---------- Cámara fija (perspectiva suave de anuncio de perfume) ----------
+      // ---------- Cámara fija ----------
       const CAMERA_Z = 10;
       const FOV = 26;
       const camera = new THREE.PerspectiveCamera(FOV, 1, 0.1, 100);
       camera.position.set(0, 0, CAMERA_Z);
       camera.lookAt(0, 0, 0);
 
-      // ---------- Fondo negro con halo cálido muy suave detrás del producto ----------
+      // ---------- Fondo negro con resplandor cálido muy suave detrás ----------
       const bgCanvas = document.createElement("canvas");
       bgCanvas.width = bgCanvas.height = 1024;
       const bg = bgCanvas.getContext("2d")!;
       bg.fillStyle = "#0a0a0a";
       bg.fillRect(0, 0, 1024, 1024);
-      const bgGrad = bg.createRadialGradient(512, 512, 0, 512, 512, 150);
-      bgGrad.addColorStop(0, "#3a2d16");
-      bgGrad.addColorStop(0.55, "#1a140a");
+      const bgGrad = bg.createRadialGradient(512, 512, 0, 512, 512, 170);
+      bgGrad.addColorStop(0, "#241c10");
+      bgGrad.addColorStop(0.6, "#14100a");
       bgGrad.addColorStop(1, "#0a0a0a");
       bg.fillStyle = bgGrad;
       bg.fillRect(0, 0, 1024, 1024);
@@ -81,100 +78,26 @@ export function HeroScene({ hasModel }: { hasModel: boolean }) {
       backdrop.position.z = -6;
       scene.add(backdrop);
 
-      // ---------- Escenario: stage (posición/escala) > float (flotación) > producto (giro) ----------
+      // ---------- Escultura ----------
       const stage = new THREE.Group();
-      const floater = new THREE.Group();
-      const product = new THREE.Group();
       scene.add(stage);
-      stage.add(floater);
-      floater.add(product);
+      const sculpture = createFragranceSculpture(THREE, { lowPower: isSmall });
+      stage.add(sculpture.group);
 
-      // Sombra de contacto suave (textura, sin coste de sombras reales)
-      const shadowCanvas = document.createElement("canvas");
-      shadowCanvas.width = shadowCanvas.height = 256;
-      const sh = shadowCanvas.getContext("2d")!;
-      const shGrad = sh.createRadialGradient(128, 128, 0, 128, 128, 128);
-      shGrad.addColorStop(0, "rgba(0,0,0,0.75)");
-      shGrad.addColorStop(0.5, "rgba(0,0,0,0.35)");
-      shGrad.addColorStop(1, "rgba(0,0,0,0)");
-      sh.fillStyle = shGrad;
-      sh.fillRect(0, 0, 256, 256);
-      const shadowTex = new THREE.CanvasTexture(shadowCanvas);
-      const shadow = new THREE.Mesh(
-        new THREE.PlaneGeometry(0.95, 0.32),
-        new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, depthWrite: false, opacity: 0.8 }),
-      );
-      shadow.rotation.x = -Math.PI / 2;
-      shadow.position.y = -0.03;
-      stage.add(shadow);
-
-      // ---------- Producto: modelo real o placeholder ----------
-      let usingPlaceholder = true;
-      if (hasModel) {
-        try {
-          const { GLTFLoader } = await import("three/examples/jsm/loaders/GLTFLoader.js");
-          const { DRACOLoader } = await import("three/examples/jsm/loaders/DRACOLoader.js");
-          const { MeshoptDecoder } = await import("three/examples/jsm/libs/meshopt_decoder.module.js");
-          const loader = new GLTFLoader();
-          const draco = new DRACOLoader();
-          draco.setDecoderPath("/draco/");
-          loader.setDRACOLoader(draco);
-          loader.setMeshoptDecoder(MeshoptDecoder);
-          const gltf = await loader.loadAsync(heroModel.path);
-          draco.dispose();
-          if (disposed) return;
-          const model = gltf.scene;
-          model.rotation.x = THREE.MathUtils.degToRad(heroModel.uprightRotationXDeg);
-          model.updateMatrixWorld(true);
-          // Normaliza: 1 unidad de alto, centrado en X/Z y con la base en y = 0
-          const box = new THREE.Box3().setFromObject(model);
-          const size = box.getSize(new THREE.Vector3());
-          const wrapper = new THREE.Group();
-          wrapper.add(model);
-          const s = 1 / Math.max(size.y, 1e-6);
-          model.position.set(-(box.min.x + size.x / 2), -box.min.y, -(box.min.z + size.z / 2));
-          wrapper.scale.setScalar(s);
-          model.traverse((o) => {
-            const mesh = o as T.Mesh;
-            if (!mesh.isMesh) return;
-            const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-            mats.forEach((m) => {
-              if ("envMapIntensity" in m) (m as T.MeshStandardMaterial).envMapIntensity = 1;
-            });
-          });
-          product.add(wrapper);
-          usingPlaceholder = false;
-        } catch (err) {
-          console.warn("[hero] No se pudo cargar el modelo 3D, se usa el placeholder.", err);
-        }
-      }
-      if (usingPlaceholder) {
-        const { createPlaceholderBottle } = await import("./hero-3d/placeholder-bottle");
-        if (disposed) return;
-        product.add(createPlaceholderBottle(THREE));
-      }
-
-      // ---------- Estela de fragancia ----------
-      const trail = createFragranceTrail(THREE);
-      floater.add(trail.group);
-
-      // ---------- Iluminación de producto ----------
-      scene.add(new THREE.AmbientLight(0xffffff, 0.12));
-      const key = new THREE.DirectionalLight(0xffffff, 2.2); // luz principal blanca y suave
+      // ---------- Iluminación: blanco cálido suave + contraluz dorado sutil ----------
+      scene.add(new THREE.AmbientLight(0xfff2e0, 0.1));
+      const key = new THREE.DirectionalLight(0xfff6ea, 1.6);
       key.position.set(-3, 4, 6);
       scene.add(key);
-      const fill = new THREE.DirectionalLight(0xfff4e6, 0.35);
-      fill.position.set(4, 1, 5);
+      const fill = new THREE.DirectionalLight(0xf3e6d2, 0.25);
+      fill.position.set(4, -1, 5);
       scene.add(fill);
-      const rim = new THREE.SpotLight(0xe0b86a, 60, 20, Math.PI / 6, 0.8, 1.2); // contraluz dorado
+      const rim = new THREE.SpotLight(0xd9b27a, 40, 20, Math.PI / 6, 0.9, 1.2);
       scene.add(rim);
       scene.add(rim.target);
-      const rim2 = new THREE.SpotLight(0xd8b060, 30, 20, Math.PI / 6, 0.8, 1.2);
-      scene.add(rim2);
-      scene.add(rim2.target);
 
-      // ---------- Bloom controlado (solo escritorio) ----------
-      let composer: { render(): void; setSize(w: number, h: number): void; setPixelRatio(r: number): void; dispose(): void } | null = null;
+      // ---------- Bloom muy controlado (solo escritorio) ----------
+      let composer: { render(): void; setSize(w: number, h: number): void; dispose(): void } | null = null;
       if (!isSmall) {
         const { EffectComposer } = await import("three/examples/jsm/postprocessing/EffectComposer.js");
         const { RenderPass } = await import("three/examples/jsm/postprocessing/RenderPass.js");
@@ -183,13 +106,12 @@ export function HeroScene({ hasModel }: { hasModel: boolean }) {
         if (disposed) return;
         const c = new EffectComposer(renderer);
         c.addPass(new RenderPass(scene, camera));
-        c.addPass(new UnrealBloomPass(new THREE.Vector2(512, 512), 0.22, 0.45, 0.88));
+        c.addPass(new UnrealBloomPass(new THREE.Vector2(512, 512), 0.18, 0.5, 0.86));
         c.addPass(new OutputPass());
         composer = c;
       }
 
       // ---------- Colocación según el ancla del layout ----------
-      const layout = { worldPerPx: 0.01, scale: 1 };
       const findAnchor = () => {
         const section = mount.parentElement;
         if (!section) return null;
@@ -206,7 +128,7 @@ export function HeroScene({ hasModel }: { hasModel: boolean }) {
         camera.updateProjectionMatrix();
 
         const visibleH = 2 * CAMERA_Z * Math.tan(THREE.MathUtils.degToRad(FOV / 2));
-        layout.worldPerPx = visibleH / h;
+        const worldPerPx = visibleH / h;
 
         const anchor = findAnchor();
         const mRect = mount.getBoundingClientRect();
@@ -215,24 +137,16 @@ export function HeroScene({ hasModel }: { hasModel: boolean }) {
         const cy = rect ? rect.top - mRect.top + rect.height / 2 : h * 0.5;
         const aw = rect?.width ?? w * 0.4;
         const ah = rect?.height ?? h * 0.7;
-        // Alto del frasco en px: cabe en el ancla contando la estela alrededor
-        const bottlePx = Math.min(ah * 0.78, aw / 1.5);
-        layout.scale = bottlePx * layout.worldPerPx;
-        stage.scale.setScalar(layout.scale);
-        stage.position.set(
-          (cx - w / 2) * layout.worldPerPx,
-          -(cy - h / 2) * layout.worldPerPx - layout.scale / 2,
-          0,
-        );
+        // ~38 % del alto del hero, siempre con aire dentro del ancla
+        const sizePx = Math.min(h * 0.38, ah * 0.85, aw * 0.8);
+        const scale = sizePx * worldPerPx;
+        stage.scale.setScalar(scale);
+        stage.position.set((cx - w / 2) * worldPerPx, -(cy - h / 2) * worldPerPx, 0);
         backdrop.position.x = stage.position.x;
-        backdrop.position.y = stage.position.y + layout.scale / 2;
+        backdrop.position.y = stage.position.y;
 
-        const bx = stage.position.x;
-        const by = stage.position.y + layout.scale / 2;
-        rim.position.set(bx + 2.5 * layout.scale, by + 1.5 * layout.scale, -3);
-        rim.target.position.set(bx, by, 0);
-        rim2.position.set(bx - 2.5 * layout.scale, by + 0.8 * layout.scale, -3);
-        rim2.target.position.set(bx, by, 0);
+        rim.position.set(stage.position.x + 2.2 * scale, stage.position.y + 1.4 * scale, -3);
+        rim.target.position.copy(stage.position);
       };
       place();
       const ro = new ResizeObserver(place);
@@ -242,14 +156,6 @@ export function HeroScene({ hasModel }: { hasModel: boolean }) {
       window.addEventListener("resize", place);
 
       // ---------- Animación ----------
-      const baseRotation = THREE.MathUtils.degToRad(heroModel.initialRotationYDeg);
-      const turnSpeed = (Math.PI * 2) / heroModel.secondsPerTurn;
-      const applyTime = (t: number) => {
-        product.rotation.y = baseRotation + t * turnSpeed; // velocidad constante
-        const floatAmp = (heroModel.floatPx * layout.worldPerPx) / layout.scale;
-        floater.position.y = Math.sin((t / heroModel.floatSeconds) * Math.PI * 2) * floatAmp;
-        trail.update(t);
-      };
       const draw = () => (composer ? composer.render() : renderer.render(scene, camera));
 
       let visible = true;
@@ -265,17 +171,17 @@ export function HeroScene({ hasModel }: { hasModel: boolean }) {
         last = now;
         if (!visible || document.hidden) return;
         elapsed += dt;
-        applyTime(elapsed);
+        sculpture.update(elapsed);
         draw();
       };
 
       if (reduceMotion) {
-        applyTime(0);
+        sculpture.update(0);
         draw();
       } else {
         raf = requestAnimationFrame(frame);
       }
-      mount.dataset.heroModel = usingPlaceholder ? "placeholder" : "liquid-brun";
+      mount.dataset.heroModel = "fragrance-sculpture";
       setReady(true);
 
       cleanup = () => {
@@ -283,17 +189,10 @@ export function HeroScene({ hasModel }: { hasModel: boolean }) {
         io.disconnect();
         ro.disconnect();
         window.removeEventListener("resize", place);
-        trail.dispose();
-        scene.traverse((obj) => {
-          const mesh = obj as T.Mesh;
-          if (!mesh.isMesh) return;
-          mesh.geometry?.dispose();
-          const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-          mats.forEach((m) => {
-            (m as T.MeshStandardMaterial).map?.dispose();
-            m.dispose();
-          });
-        });
+        sculpture.dispose();
+        backdrop.geometry.dispose();
+        (backdrop.material as T.MeshBasicMaterial).dispose();
+        bgTex.dispose();
         composer?.dispose();
         envTexture.dispose();
         pmrem.dispose();
@@ -308,7 +207,7 @@ export function HeroScene({ hasModel }: { hasModel: boolean }) {
       disposed = true;
       cleanup?.();
     };
-  }, [hasModel]);
+  }, []);
 
   return (
     <div

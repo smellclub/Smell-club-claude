@@ -23,9 +23,7 @@ const supabase = supabaseOrigin();
  */
 const csp = [
   "default-src 'self'",
-  // 'wasm-unsafe-eval': solo WebAssembly (decodificadores Draco/Meshopt del modelo 3D)
-  `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'${isDev ? " 'unsafe-eval'" : ""}`,
-  "worker-src 'self' blob:",
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   `img-src 'self' data: blob:${supabase ? ` ${supabase.origin}` : ""}`,
   "font-src 'self' data:",
