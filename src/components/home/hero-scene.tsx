@@ -5,7 +5,8 @@ import type * as T from "three";
 
 /**
  * Escena 3D del hero: "escultura de fragancia" abstracta (seda, vapor,
- * líquido y luz dorada) suspendida a la derecha del título.
+ * líquido y luz dorada) a la derecha del título, con una estela de seda
+ * que atraviesa la pantalla.
  *
  * - La forma se genera por código en ./hero-3d/fragrance-sculpture.ts.
  * - Cámara FIJA. Solo la escultura gira y se deforma, muy despacio.
@@ -39,7 +40,7 @@ export function HeroScene() {
 
       // ---------- Renderer ----------
       const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, isSmall ? 1.5 : 2));
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // nitidez también en móvil
       renderer.setClearColor(0x0a0a0a, 1);
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       renderer.toneMappingExposure = 1.0;
@@ -83,6 +84,7 @@ export function HeroScene() {
       scene.add(stage);
       const sculpture = createFragranceSculpture(THREE, { lowPower: isSmall });
       stage.add(sculpture.group);
+      scene.add(sculpture.crossing);
 
       // ---------- Iluminación: blanco cálido suave + contraluz dorado sutil ----------
       scene.add(new THREE.AmbientLight(0xfff2e0, 0.1));
@@ -106,10 +108,12 @@ export function HeroScene() {
         if (disposed) return;
         const c = new EffectComposer(renderer);
         c.addPass(new RenderPass(scene, camera));
-        c.addPass(new UnrealBloomPass(new THREE.Vector2(512, 512), 0.18, 0.5, 0.86));
+        c.addPass(new UnrealBloomPass(new THREE.Vector2(512, 512), 0.14, 0.35, 0.9));
         c.addPass(new OutputPass());
         composer = c;
       }
+
+      const draw = () => (composer ? composer.render() : renderer.render(scene, camera));
 
       // ---------- Colocación según el ancla del layout ----------
       const findAnchor = () => {
@@ -138,15 +142,46 @@ export function HeroScene() {
         const aw = rect?.width ?? w * 0.4;
         const ah = rect?.height ?? h * 0.7;
         // ~38 % del alto del hero, siempre con aire dentro del ancla
-        const sizePx = Math.min(h * 0.38, ah * 0.85, aw * 0.8);
+        const wide = aw < w * 0.7; // escritorio: ancla a la derecha del texto
+        const sizePx = wide ? Math.min(h * 0.58, ah * 1.0, aw * 0.95) : Math.min(h * 0.5, ah * 1.0, aw * 0.9);
         const scale = sizePx * worldPerPx;
         stage.scale.setScalar(scale);
         stage.position.set((cx - w / 2) * worldPerPx, -(cy - h / 2) * worldPerPx, 0);
+
+        // Recorrido de la estela: entra por un borde, pasa por la escultura y
+        // sale por el otro, siempre por fuera de la zona de textos y botones.
+        const top = cy - ah / 2;
+        const left = cx - aw / 2;
+        const px: Array<[number, number]> = wide
+          ? [
+              [-0.08 * w, 0.98 * h],
+              [0.3 * w, 0.9 * h],
+              [left + 0.12 * aw, top + 0.92 * ah],
+              [cx, cy],
+              [left + 0.88 * aw, top + 0.06 * ah],
+              [0.9 * w, 0.03 * h],
+              [1.08 * w, -0.08 * h],
+            ]
+          : [
+              [-0.12 * w, top + 0.18 * ah],
+              [0.22 * w, top + 0.3 * ah],
+              [cx, cy],
+              [0.78 * w, top + 0.7 * ah],
+              [1.12 * w, top + 0.82 * ah],
+            ];
+        sculpture.setPath(
+          px.map(([x, y]) => new THREE.Vector3((x - w / 2) * worldPerPx, -(y - h / 2) * worldPerPx, 0)),
+          scale,
+        );
         backdrop.position.x = stage.position.x;
         backdrop.position.y = stage.position.y;
 
         rim.position.set(stage.position.x + 2.2 * scale, stage.position.y + 1.4 * scale, -3);
         rim.target.position.copy(stage.position);
+        if (reduceMotion) {
+          sculpture.update(0);
+          draw();
+        }
       };
       place();
       const ro = new ResizeObserver(place);
@@ -156,7 +191,6 @@ export function HeroScene() {
       window.addEventListener("resize", place);
 
       // ---------- Animación ----------
-      const draw = () => (composer ? composer.render() : renderer.render(scene, camera));
 
       let visible = true;
       const io = new IntersectionObserver(([entry]) => (visible = entry.isIntersecting), { threshold: 0 });
