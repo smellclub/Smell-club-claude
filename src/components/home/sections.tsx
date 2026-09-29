@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { siteConfig } from "@/config/site";
+import { HeroScene } from "@/components/home/hero-scene";
+import { HeroTitle } from "@/components/home/hero-title";
 import { ProductRail } from "@/components/product/product-card";
 import { ButtonLink } from "@/components/ui/button";
 import {
@@ -18,33 +20,53 @@ import type { Category, Product } from "@/types/domain";
 export function Hero() {
   const { hero } = siteConfig;
   return (
-    <section className="relative overflow-hidden bg-ink text-ivory">
+    <section className="relative isolate overflow-hidden bg-ink text-ivory">
+      {/* Fondo base (visible también sin WebGL) */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,rgba(197,162,90,0.22),transparent_60%),radial-gradient(ellipse_at_80%_100%,rgba(197,162,90,0.10),transparent_50%)]"
+        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_50%_60%,rgba(197,162,90,0.18),transparent_55%),radial-gradient(ellipse_at_50%_0%,rgba(197,162,90,0.12),transparent_50%)] md:bg-[radial-gradient(ellipse_at_72%_55%,rgba(197,162,90,0.2),transparent_50%),radial-gradient(ellipse_at_20%_0%,rgba(197,162,90,0.1),transparent_50%)]"
       />
-      <div aria-hidden="true" className="pointer-events-none absolute inset-x-6 top-6 bottom-6 border border-gold/15 sm:inset-x-10" />
-      <Container className="relative flex min-h-[82svh] flex-col items-center justify-center py-24 text-center md:min-h-[88vh]">
-        <p className="eyebrow animate-fade-up text-gold">{hero.eyebrow}</p>
-        <h1 className="animate-fade-up mt-6 font-display text-6xl leading-none font-medium tracking-[0.12em] uppercase [animation-delay:120ms] sm:text-8xl md:text-9xl">
-          Smell<span className="text-gold">club</span>
-        </h1>
-        <p className="animate-fade-up mt-6 font-display text-2xl text-ivory/90 italic [animation-delay:240ms] sm:text-3xl">
-          {siteConfig.tagline}
-        </p>
-        <span className="gold-rule animate-fade-up mt-8 [animation-delay:300ms]" aria-hidden="true" />
-        <p className="animate-fade-up mt-8 max-w-md text-sm leading-relaxed text-ivory/65 [animation-delay:360ms] sm:text-base">
-          {hero.subtitle}
-        </p>
-        <div className="animate-fade-up mt-10 flex w-full max-w-sm flex-col gap-3 [animation-delay:480ms] sm:max-w-none sm:flex-row sm:justify-center">
-          <ButtonLink href={hero.primaryCta.href} variant="gold" size="lg">
-            {hero.primaryCta.label}
-          </ButtonLink>
-          <ButtonLink href={hero.secondaryCta.href} variant="outline-light" size="lg">
-            {hero.secondaryCta.label}
-          </ButtonLink>
+      <HeroScene />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-5 top-5 bottom-5 z-10 border border-gold/15 sm:inset-x-8" />
+
+      {/* Efecto de apertura */}
+      <div aria-hidden="true" className="hero-curtain hero-curtain-top" />
+      <div aria-hidden="true" className="hero-curtain hero-curtain-bottom" />
+      <div aria-hidden="true" className="hero-curtain-line" />
+
+      <Container className="relative z-20 flex min-h-[calc(100svh-4rem)] flex-col py-14 text-center md:min-h-[calc(100svh-5rem)] md:justify-center md:py-20 md:text-left">
+        <div className="md:max-w-[58%]">
+          <p className="eyebrow animate-fade-up text-gold [animation-delay:900ms]">{hero.eyebrow}</p>
+          <div className="mt-5 md:-ml-2">
+            <HeroTitle />
+          </div>
+          <p className="animate-fade-up mt-5 font-display text-2xl text-ivory/90 italic [animation-delay:1300ms] sm:text-3xl">
+            {siteConfig.tagline}
+          </p>
+        </div>
+
+        {/* Espacio para el frasco 3D en móvil */}
+        <div aria-hidden="true" className="min-h-[34svh] flex-1 md:hidden" />
+
+        <div className="md:mt-8 md:max-w-[50%]">
+          <p className="animate-fade-up mx-auto max-w-md text-sm leading-relaxed text-ivory/70 [animation-delay:1450ms] sm:text-base md:mx-0">
+            {hero.subtitle}
+          </p>
+          <div className="animate-fade-up mx-auto mt-7 flex w-full max-w-sm flex-col gap-3 [animation-delay:1600ms] sm:max-w-none sm:flex-row sm:justify-center md:justify-start">
+            <ButtonLink href={hero.primaryCta.href} variant="gold" size="lg" className="shadow-[0_0_40px_rgba(197,162,90,0.35)]">
+              {hero.primaryCta.label}
+            </ButtonLink>
+            <ButtonLink href={hero.secondaryCta.href} variant="outline-light" size="lg" className="backdrop-blur-sm">
+              {hero.secondaryCta.label}
+            </ButtonLink>
+          </div>
         </div>
       </Container>
+
+      <div aria-hidden="true" className="animate-fade-in absolute bottom-8 left-1/2 z-20 hidden -translate-x-1/2 flex-col items-center gap-2 [animation-delay:2200ms] md:flex">
+        <span className="eyebrow text-[0.55rem] text-ivory/50">Descubre</span>
+        <span className="block h-10 w-px bg-gold/70 [animation:hero-scroll_2s_ease-in-out_infinite]" />
+      </div>
     </section>
   );
 }

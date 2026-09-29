@@ -122,6 +122,83 @@
     display: none;
   }
 
+  /* ---------- Hero 3D ---------- */
+  .hero-title {
+    position: relative;
+    letter-spacing: 0.08em;
+    transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+    transform-style: preserve-3d;
+    will-change: transform;
+  }
+  .hero-letter {
+    display: inline-block;
+    color: var(--color-ivory);
+    opacity: 0;
+    transform-origin: 50% 90%;
+    text-shadow:
+      0 1px 0 #d6d0c4, 0 2px 0 #bdb6a9, 0 3px 0 #a39c8f, 0 4px 0 #898376, 0 5px 0 #6f6a60,
+      0 12px 22px rgb(0 0 0 / 0.6), 0 0 42px rgb(197 162 90 / 0.25);
+  }
+  .hero-letter-gold {
+    color: #dcbb6f;
+    text-shadow:
+      0 1px 0 #bc9a52, 0 2px 0 #a78743, 0 3px 0 #8f7032, 0 4px 0 #775b25, 0 5px 0 #5f481b,
+      0 12px 22px rgb(0 0 0 / 0.6), 0 0 48px rgb(227 204 147 / 0.45);
+  }
+  @keyframes hero-letter-in {
+    0% { opacity: 0; transform: translateY(45%) rotateX(-100deg) translateZ(-160px); filter: blur(6px); }
+    60% { opacity: 1; filter: blur(0); }
+    100% { opacity: 1; transform: none; filter: blur(0); }
+  }
+  /* Destello dorado que recorre las letras en ola */
+  .hero-letter.hero-letter-ready {
+    animation:
+      hero-letter-in 1.15s cubic-bezier(0.2, 0.9, 0.25, 1) forwards var(--d),
+      hero-glint 6s ease-in-out infinite calc(var(--d) + 1.8s);
+  }
+  @keyframes hero-glint {
+    0%, 12%, 100% { filter: brightness(1); }
+    6% { filter: brightness(1.45) drop-shadow(0 0 14px rgb(255 232 180 / 0.55)); }
+  }
+  .hero-curtain {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 50.5%;
+    z-index: 30;
+    background: var(--color-ink);
+    pointer-events: none;
+    animation: hero-curtain-open 0.9s cubic-bezier(0.7, 0, 0.2, 1) 0.55s forwards;
+  }
+  .hero-curtain-top { top: 0; --dir: -100%; }
+  .hero-curtain-bottom { bottom: 0; --dir: 100%; }
+  @keyframes hero-curtain-open {
+    to { transform: translateY(var(--dir)); }
+  }
+  .hero-curtain-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 1px;
+    z-index: 31;
+    background: linear-gradient(90deg, transparent, var(--color-gold-light), transparent);
+    transform: scaleX(0);
+    pointer-events: none;
+    animation: hero-line 1.2s cubic-bezier(0.7, 0, 0.2, 1) forwards;
+  }
+  @keyframes hero-line {
+    0% { transform: scaleX(0); opacity: 1; }
+    45% { transform: scaleX(1); opacity: 1; }
+    100% { transform: scaleX(1); opacity: 0; }
+  }
+  @keyframes hero-scroll {
+    0% { transform: scaleY(0); transform-origin: top; }
+    50% { transform: scaleY(1); transform-origin: top; }
+    51% { transform-origin: bottom; }
+    100% { transform: scaleY(0); transform-origin: bottom; }
+  }
+
   .skeleton {
     background: linear-gradient(90deg, var(--color-sand) 25%, #ebe6dc 37%, var(--color-sand) 63%);
     background-size: 400% 100%;
