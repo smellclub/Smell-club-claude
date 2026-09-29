@@ -4,15 +4,11 @@ import Image from "next/image";
 import { useEffect, useRef } from "react";
 
 /**
- * Perfume destacado recortado (sin fondo) envuelto en una estela animada.
- * Tres estilos, dibujados en 2D (canvas) para que sea liviano:
- *  - "seda":  cintas doradas que giran alrededor del frasco.
- *  - "humo":  humo dorado que sube en espiral.
- *  - "polvo": remolino de polvo de oro orbitando.
- * Hay dos lienzos: uno detrás del frasco y otro delante, así la estela
- * pasa por detrás y por delante (parece que lo envuelve).
+ * Perfume destacado recortado (sin fondo) envuelto en cintas de seda
+ * doradas que giran a su alrededor. Se dibuja en 2D (canvas) para que sea
+ * liviano. Hay dos lienzos: uno detrás del frasco y otro delante, así la
+ * seda pasa por detrás y por delante (parece que lo envuelve).
  */
-export type AuraStyle = "seda" | "humo" | "polvo";
 
 type Ctx = CanvasRenderingContext2D;
 type Frame = { back: Ctx; front: Ctx; W: number; H: number; t: number };
@@ -56,7 +52,7 @@ function glowBehind(ctx: Ctx, W: number, H: number) {
   ctx.fillRect(0, 0, W, H);
 }
 
-// ---------- Opción 1: cintas de seda ----------
+// ---------- Cintas de seda ----------
 function sedaScene(): Scene {
   const ribbons = [
     { R: 1.08, flat: 0.3, roll: -0.22, yc: 0.64, speed: 0.3, len: 4.6, width: 0.034, phase: 0 },
@@ -131,145 +127,7 @@ function sedaScene(): Scene {
   };
 }
 
-// ---------- Opción 2: humo dorado ----------
-function smokeSprite() {
-  const c = document.createElement("canvas");
-  c.width = c.height = 64;
-  const g = c.getContext("2d")!;
-  const grad = g.createRadialGradient(32, 32, 0, 32, 32, 32);
-  grad.addColorStop(0, "rgba(236,200,138,0.9)");
-  grad.addColorStop(0.35, "rgba(214,170,100,0.35)");
-  grad.addColorStop(1, "rgba(214,170,100,0)");
-  g.fillStyle = grad;
-  g.fillRect(0, 0, 64, 64);
-  return c;
-}
-
-function humoScene(small: boolean): Scene {
-  const sprite = smokeSprite();
-  const N = small ? 120 : 220;
-  const parts = Array.from({ length: N }, (_, i) => ({
-    a0: Math.random() * Math.PI * 2,
-    off: i / N + Math.random() * 0.02,
-    spin: 0.9 + Math.random() * 0.6,
-    size: 0.7 + Math.random() * 0.6,
-  }));
-  const LIFE = 11;
-  const SEG = small ? 70 : 110;
-  const wisps = Array.from({ length: small ? 4 : 6 }, (_, i) => ({
-    a0: (i / (small ? 4 : 6)) * Math.PI * 2 + Math.random() * 0.5,
-    turns: 1.1 + Math.random() * 0.5,
-    speed: 0.28 + Math.random() * 0.12,
-    width: 0.7 + Math.random() * 0.6,
-    alpha: 0.7 + Math.random() * 0.3,
-  }));
-  return ({ back, front, W, H, t }) => {
-    glowBehind(back, W, H);
-    const { cx, cy, bh, bw } = geometry(W, H);
-    const base = cy + bh * 0.5;
-    back.globalCompositeOperation = "lighter";
-    front.globalCompositeOperation = "lighter";
-    for (const p of parts) {
-      const age = (t / LIFE + p.off) % 1;
-      const a = p.a0 + age * Math.PI * 2 * 1.6 * p.spin + t * 0.1;
-      const r = bw * (0.62 + 0.3 * age);
-      const y = base - age * bh * 1.05 + Math.sin(a) * r * 0.26;
-      const x = cx + Math.cos(a) * r + Math.sin(age * 6 + p.a0) * bw * 0.05;
-      const z = Math.sin(a);
-      const size = H * (0.05 + 0.11 * age) * p.size;
-      // Se desvanece al subir para no cortarse contra el borde
-      const topFade = Math.min(1, Math.max(0, (y - size) / (H * 0.12)));
-      const alpha = Math.pow(Math.sin(Math.PI * age), 1.4) * (z > 0 ? 0.15 : 0.11) * topFade;
-      const ctx = z > 0 ? front : back;
-      ctx.globalAlpha = alpha;
-      ctx.drawImage(sprite, x - size / 2, y - size / 2, size, size);
-    }
-    back.globalAlpha = front.globalAlpha = 1;
-
-    // Hebras de humo en espiral que suben envolviendo el frasco
-    back.lineCap = front.lineCap = "round";
-    for (const w of wisps) {
-      let prev: { x: number; y: number } | null = null;
-      for (let i = 0; i <= SEG; i++) {
-        const s = i / SEG;
-        const a = w.a0 + s * Math.PI * 2 * w.turns + t * w.speed;
-        const r = bw * (0.6 + 0.28 * s) + Math.sin(s * 7 + t * 0.6 + w.a0) * bw * 0.06;
-        const x = cx + Math.cos(a) * r;
-        const y = base - s * bh * 1.08 + Math.sin(a) * r * 0.24 + Math.sin(s * 5 - t * 0.4 + w.a0) * bh * 0.015;
-        if (prev) {
-          const z = Math.sin(a);
-          const ctx = z > 0 ? front : back;
-          const k = Math.pow(Math.sin(Math.PI * s), 1.2) * (z > 0 ? 1 : 0.6) * w.alpha;
-          const width = (1.2 + 7 * s) * w.width;
-          ctx.strokeStyle = `rgba(226,188,120,${(k * 0.07).toFixed(3)})`;
-          ctx.lineWidth = width * 5;
-          ctx.beginPath();
-          ctx.moveTo(prev.x, prev.y);
-          ctx.lineTo(x, y);
-          ctx.stroke();
-          ctx.strokeStyle = `rgba(250,232,196,${(k * 0.32).toFixed(3)})`;
-          ctx.lineWidth = width;
-          ctx.stroke();
-        }
-        prev = { x, y };
-      }
-    }
-    back.globalCompositeOperation = front.globalCompositeOperation = "source-over";
-  };
-}
-
-// ---------- Opción 3: polvo de oro ----------
-function polvoScene(small: boolean): Scene {
-  const N = small ? 260 : 520;
-  const bands = [
-    { R: 1.05, flat: 0.28, roll: -0.2, yc: 0.55 },
-    { R: 1.2, flat: 0.22, roll: 0.25, yc: 0.4 },
-  ];
-  const dots = Array.from({ length: N }, () => {
-    const band = bands[Math.random() < 0.6 ? 0 : 1];
-    const spread = 1 + (Math.random() - 0.5) * 0.45;
-    return {
-      band,
-      spread,
-      a0: Math.random() * Math.PI * 2,
-      speed: 0.22 * Math.pow(1 / spread, 1.5),
-      dy: (Math.random() - 0.5) * 0.06,
-      tw: Math.random() * Math.PI * 2,
-      w: 0.6 + Math.random() * 1.1,
-    };
-  });
-  return ({ back, front, W, H, t }) => {
-    glowBehind(back, W, H);
-    const { cx, cy, bh, bw } = geometry(W, H);
-    back.globalCompositeOperation = "lighter";
-    front.globalCompositeOperation = "lighter";
-    back.lineCap = front.lineCap = "round";
-    for (const d of dots) {
-      const a = d.a0 + t * d.speed;
-      const R = bw * d.band.R * d.spread;
-      const yc = cy - bh / 2 + bh * (d.band.yc + d.dy);
-      const p1 = orbit(cx, yc, R, d.band.flat, d.band.roll, a);
-      const p0 = orbit(cx, yc, R, d.band.flat, d.band.roll, a - 0.22);
-      const tw = 0.55 + 0.45 * Math.sin(t * 1.6 + d.tw);
-      const light = (p1.z + 1) / 2;
-      const col = mix(GOLD, IVORY, light * tw);
-      const ctx = p1.z > 0 ? front : back;
-      const alpha = (0.25 + 0.6 * light) * tw;
-      const grad = ctx.createLinearGradient(p0.x, p0.y, p1.x, p1.y);
-      grad.addColorStop(0, `rgba(${col[0]},${col[1]},${col[2]},0)`);
-      grad.addColorStop(1, `rgba(${col[0]},${col[1]},${col[2]},${alpha.toFixed(3)})`);
-      ctx.strokeStyle = grad;
-      ctx.lineWidth = d.w * (0.7 + 0.5 * light);
-      ctx.beginPath();
-      ctx.moveTo(p0.x, p0.y);
-      ctx.lineTo(p1.x, p1.y);
-      ctx.stroke();
-    }
-    back.globalCompositeOperation = front.globalCompositeOperation = "source-over";
-  };
-}
-
-export function FeaturedAura({ variant, image, alt }: { variant: AuraStyle; image: string; alt: string }) {
+export function FeaturedAura({ image, alt }: { image: string; alt: string }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const backRef = useRef<HTMLCanvasElement>(null);
   const frontRef = useRef<HTMLCanvasElement>(null);
@@ -283,9 +141,8 @@ export function FeaturedAura({ variant, image, alt }: { variant: AuraStyle; imag
     const front = f.getContext("2d");
     if (!back || !front) return;
 
-    const small = window.innerWidth < 768;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const scene = variant === "seda" ? sedaScene() : variant === "humo" ? humoScene(small) : polvoScene(small);
+    const scene = sedaScene();
 
     let W = 0;
     let H = 0;
@@ -338,7 +195,7 @@ export function FeaturedAura({ variant, image, alt }: { variant: AuraStyle; imag
       ro.disconnect();
       io.disconnect();
     };
-  }, [variant]);
+  }, []);
 
   return (
     <div ref={wrapRef} className="relative h-full w-full">

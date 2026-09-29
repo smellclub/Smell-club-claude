@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { siteConfig } from "@/config/site";
-import { FeaturedAura, type AuraStyle } from "@/components/home/featured-aura";
+import { FeaturedAura } from "@/components/home/featured-aura";
 import { HeroTitle } from "@/components/home/hero-title";
 import { ProductRail } from "@/components/product/product-card";
 import { ButtonLink } from "@/components/ui/button";
@@ -18,8 +18,9 @@ import {
 import { Container, SectionHeading } from "@/components/ui/layout";
 import type { Category, Product } from "@/types/domain";
 
-export function Hero({ aura }: { aura?: AuraStyle } = {}) {
+export function Hero() {
   const { hero } = siteConfig;
+  const aura = Boolean(hero.featured.cutout);
   return (
     <section className="relative isolate overflow-hidden bg-ink text-ivory">
       {/* Fondo base (visible también sin WebGL) */}
@@ -30,7 +31,7 @@ export function Hero({ aura }: { aura?: AuraStyle } = {}) {
       {/* Perfume destacado en escritorio (derecha, fuera del texto) */}
       <div className="absolute top-[14%] right-[6%] bottom-[14%] z-20 hidden w-[36%] items-center justify-center md:flex">
         {aura ? (
-          <HeroFeatured aura={aura} className="h-full max-h-[640px] w-full" frameClassName="w-full min-h-0 flex-1" />
+          <HeroFeatured aura className="h-full max-h-[640px] w-full" frameClassName="w-full min-h-0 flex-1" />
         ) : (
           <HeroFeatured className="aspect-[4/6] h-full max-h-[600px]" frameClassName="w-full min-h-0 flex-1" />
         )}
@@ -56,7 +57,7 @@ export function Hero({ aura }: { aura?: AuraStyle } = {}) {
         {/* Perfume destacado en móvil (entre el texto y los botones) */}
         <div className="my-8 flex flex-1 items-center justify-center md:hidden">
           {aura ? (
-            <HeroFeatured aura={aura} className="w-full max-w-[340px]" frameClassName="w-full aspect-square" />
+            <HeroFeatured aura className="w-[88%] max-w-[300px]" frameClassName="w-full aspect-square" />
           ) : (
             <HeroFeatured className="w-[68%] max-w-[260px]" frameClassName="w-full aspect-[4/5]" />
           )}
@@ -93,7 +94,7 @@ function HeroFeatured({
 }: {
   className?: string;
   frameClassName?: string;
-  aura?: AuraStyle;
+  aura?: boolean;
 }) {
   const { featured } = siteConfig.hero;
   return (
@@ -104,7 +105,7 @@ function HeroFeatured({
     >
       {aura ? (
         <div className={`relative ${frameClassName}`}>
-          <FeaturedAura variant={aura} image={featured.cutout} alt={`${featured.name} de ${featured.brand}`} />
+          <FeaturedAura image={featured.cutout} alt={`${featured.name} de ${featured.brand}`} />
         </div>
       ) : (
         <div className={`relative overflow-hidden ${frameClassName} border border-gold/40 bg-white shadow-[0_30px_90px_-25px_rgba(197,162,90,0.55)] transition-shadow duration-500 group-hover:shadow-[0_30px_100px_-15px_rgba(197,162,90,0.7)]`}>

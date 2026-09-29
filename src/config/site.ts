@@ -27,7 +27,11 @@ export const siteConfig = {
      */
     featured: {
       image: "/products/khamrah.jpg",
-      /** Misma foto recortada (PNG sin fondo) para las versiones con estela */
+      /**
+       * Misma foto recortada (PNG sin fondo). Si existe, se muestra con la
+       * estela de seda dorada; si se deja vacía (""), se muestra la foto
+       * normal en una vitrina con fondo blanco.
+       */
       cutout: "/hero/khamrah.png",
       name: "Khamrah",
       brand: "Lattafa",
