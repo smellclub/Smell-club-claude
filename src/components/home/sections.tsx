@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { siteConfig } from "@/config/site";
+import { FeaturedAura, type AuraStyle } from "@/components/home/featured-aura";
 import { HeroTitle } from "@/components/home/hero-title";
 import { ProductRail } from "@/components/product/product-card";
 import { ButtonLink } from "@/components/ui/button";
@@ -17,7 +18,7 @@ import {
 import { Container, SectionHeading } from "@/components/ui/layout";
 import type { Category, Product } from "@/types/domain";
 
-export function Hero() {
+export function Hero({ aura }: { aura?: AuraStyle } = {}) {
   const { hero } = siteConfig;
   return (
     <section className="relative isolate overflow-hidden bg-ink text-ivory">
@@ -28,7 +29,11 @@ export function Hero() {
       />
       {/* Perfume destacado en escritorio (derecha, fuera del texto) */}
       <div className="absolute top-[14%] right-[6%] bottom-[14%] z-20 hidden w-[36%] items-center justify-center md:flex">
-        <HeroFeatured className="aspect-[4/6] h-full max-h-[600px]" frameClassName="w-full min-h-0 flex-1" />
+        {aura ? (
+          <HeroFeatured aura={aura} className="h-full max-h-[640px] w-full" frameClassName="w-full min-h-0 flex-1" />
+        ) : (
+          <HeroFeatured className="aspect-[4/6] h-full max-h-[600px]" frameClassName="w-full min-h-0 flex-1" />
+        )}
       </div>
       <div aria-hidden="true" className="pointer-events-none absolute inset-x-5 top-5 bottom-5 z-10 border border-gold/15 sm:inset-x-8" />
 
@@ -50,7 +55,11 @@ export function Hero() {
 
         {/* Perfume destacado en móvil (entre el texto y los botones) */}
         <div className="my-8 flex flex-1 items-center justify-center md:hidden">
-          <HeroFeatured className="w-[68%] max-w-[260px]" frameClassName="w-full aspect-[4/5]" />
+          {aura ? (
+            <HeroFeatured aura={aura} className="w-full max-w-[340px]" frameClassName="w-full aspect-square" />
+          ) : (
+            <HeroFeatured className="w-[68%] max-w-[260px]" frameClassName="w-full aspect-[4/5]" />
+          )}
         </div>
 
         <div className="md:mt-8 md:max-w-[50%]">
@@ -77,7 +86,15 @@ export function Hero() {
 }
 
 /** Vitrina del perfume destacado: foto sobre fondo claro con marco dorado */
-function HeroFeatured({ className = "", frameClassName = "" }: { className?: string; frameClassName?: string }) {
+function HeroFeatured({
+  className = "",
+  frameClassName = "",
+  aura,
+}: {
+  className?: string;
+  frameClassName?: string;
+  aura?: AuraStyle;
+}) {
   const { featured } = siteConfig.hero;
   return (
     <Link
@@ -85,17 +102,23 @@ function HeroFeatured({ className = "", frameClassName = "" }: { className?: str
       className={`group animate-fade-up flex max-w-full flex-col items-center [animation-delay:1500ms] ${className}`}
       aria-label={`Ver ${featured.name} de ${featured.brand}`}
     >
-      <div className={`relative overflow-hidden ${frameClassName} border border-gold/40 bg-white shadow-[0_30px_90px_-25px_rgba(197,162,90,0.55)] transition-shadow duration-500 group-hover:shadow-[0_30px_100px_-15px_rgba(197,162,90,0.7)]`}>
-        <Image
-          src={featured.image}
-          alt={`${featured.name} de ${featured.brand}`}
-          fill
-          priority
-          sizes="(min-width: 768px) 36vw, 70vw"
-          className="scale-[1.12] object-contain p-2 transition-transform duration-700 ease-out group-hover:scale-[1.17]"
-        />
-        <div aria-hidden="true" className="pointer-events-none absolute inset-2 border border-gold/25" />
-      </div>
+      {aura ? (
+        <div className={`relative ${frameClassName}`}>
+          <FeaturedAura variant={aura} image={featured.cutout} alt={`${featured.name} de ${featured.brand}`} />
+        </div>
+      ) : (
+        <div className={`relative overflow-hidden ${frameClassName} border border-gold/40 bg-white shadow-[0_30px_90px_-25px_rgba(197,162,90,0.55)] transition-shadow duration-500 group-hover:shadow-[0_30px_100px_-15px_rgba(197,162,90,0.7)]`}>
+          <Image
+            src={featured.image}
+            alt={`${featured.name} de ${featured.brand}`}
+            fill
+            priority
+            sizes="(min-width: 768px) 36vw, 70vw"
+            className="scale-[1.12] object-contain p-2 transition-transform duration-700 ease-out group-hover:scale-[1.17]"
+          />
+          <div aria-hidden="true" className="pointer-events-none absolute inset-2 border border-gold/25" />
+        </div>
+      )}
       <p className="mt-4 text-center">
         <span className="eyebrow block text-[0.6rem] text-gold">Destacado</span>
         <span className="mt-1 block font-display text-xl text-ivory">

@@ -27,6 +27,8 @@ export const siteConfig = {
      */
     featured: {
       image: "/products/khamrah.jpg",
+      /** Misma foto recortada (PNG sin fondo) para las versiones con estela */
+      cutout: "/hero/khamrah.png",
       name: "Khamrah",
       brand: "Lattafa",
       href: "/product/khamrah",
