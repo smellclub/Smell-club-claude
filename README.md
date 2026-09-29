@@ -233,6 +233,6 @@ Con Docker instalado puedes usar Supabase local: `npx supabase start` (aplica `m
 - [ ] Prueba la web en iPhone y Android, incluido abrir un enlace desde Instagram.
 - [ ] Supabase: revisa las copias de seguridad de tu plan (Database → Backups).
 
-## 11. Escultura 3D de la portada
+## 11. Humo dorado de la portada
 
-La portada muestra una escultura abstracta de "fragancia en el aire" (cinta de seda / vapor dorado) generada por código, sin archivos 3D externos. Se configura en `src/components/home/hero-3d/fragrance-sculpture.ts` (forma, colores, velocidad).
+La portada muestra humo dorado translúcido que sube junto al título, con una estela de humo que cruza la pantalla y pequeños destellos. Se genera por código (shaders), sin archivos 3D externos. Se configura en `src/components/home/hero-3d/golden-smoke.ts` (colores, velocidad, opacidad) y su recorrido en `src/components/home/hero-scene.tsx`.

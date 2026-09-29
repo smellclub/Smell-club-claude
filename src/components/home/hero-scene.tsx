@@ -4,16 +4,15 @@ import { useEffect, useRef, useState } from "react";
 import type * as T from "three";
 
 /**
- * Escena 3D del hero: "escultura de fragancia" abstracta (seda, vapor,
- * líquido y luz dorada) a la derecha del título, con una estela de seda
- * que atraviesa la pantalla.
+ * Escena 3D del hero: humo dorado translúcido que sube en espiral a la
+ * derecha del título, con una estela de humo que atraviesa la pantalla.
  *
- * - La forma se genera por código en ./hero-3d/fragrance-sculpture.ts.
- * - Cámara FIJA. Solo la escultura gira y se deforma, muy despacio.
- * - Se coloca sobre el elemento [data-hero-anchor] visible (derecha en
+ * - El humo se genera por shader en ./hero-3d/golden-smoke.ts.
+ * - Cámara FIJA. Solo el humo fluye, muy despacio.
+ * - Se coloca según el elemento [data-hero-anchor] visible (derecha en
  *   escritorio, entre el texto en móvil) y nunca tapa textos ni botones.
- * - three.js se carga bajo demanda, se pausa fuera de pantalla y respeta
- *   "reducir movimiento".
+ * - three.js se carga bajo demanda, se pausa fuera de pantalla, respeta
+ *   "reducir movimiento" y baja la resolución sola si el equipo va lento.
  */
 export function HeroScene() {
   const mountRef = useRef<HTMLDivElement>(null);
@@ -31,8 +30,7 @@ export function HeroScene() {
       if (!probe.getContext("webgl2") && !probe.getContext("webgl")) return;
 
       const THREE = await import("three");
-      const { RoomEnvironment } = await import("three/examples/jsm/environments/RoomEnvironment.js");
-      const { createFragranceSculpture } = await import("./hero-3d/fragrance-sculpture");
+      const { createGoldenSmoke } = await import("./hero-3d/golden-smoke");
       if (disposed) return;
 
       const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -52,10 +50,6 @@ export function HeroScene() {
       mount.appendChild(renderer.domElement);
 
       const scene = new THREE.Scene();
-      const pmrem = new THREE.PMREMGenerator(renderer);
-      const envTexture = pmrem.fromScene(new RoomEnvironment(), 0.02).texture;
-      scene.environment = envTexture;
-      scene.environmentIntensity = 0.55; // reflejos sutiles, no espejo
 
       // ---------- Cámara fija ----------
       const CAMERA_Z = 10;
@@ -82,26 +76,12 @@ export function HeroScene() {
       backdrop.position.z = -6;
       scene.add(backdrop);
 
-      // ---------- Escultura ----------
-      const stage = new THREE.Group();
-      scene.add(stage);
-      const sculpture = createFragranceSculpture(THREE, { lowPower: isSmall });
-      stage.add(sculpture.group);
-      scene.add(sculpture.crossing);
+      // ---------- Humo ----------
+      const smoke = createGoldenSmoke(THREE, { lowPower: isSmall });
+      smoke.setPixelRatio(pixelRatio);
+      scene.add(smoke.group);
 
-      // ---------- Iluminación: blanco cálido suave + contraluz dorado sutil ----------
-      scene.add(new THREE.AmbientLight(0xfff2e0, 0.1));
-      const key = new THREE.DirectionalLight(0xfff6ea, 1.6);
-      key.position.set(-3, 4, 6);
-      scene.add(key);
-      const fill = new THREE.DirectionalLight(0xf3e6d2, 0.25);
-      fill.position.set(4, -1, 5);
-      scene.add(fill);
-      const rim = new THREE.SpotLight(0xd9b27a, 40, 20, Math.PI / 6, 0.9, 1.2);
-      scene.add(rim);
-      scene.add(rim.target);
-
-      // ---------- Bloom muy controlado (solo escritorio) ----------
+      // ---------- Bloom suave (solo escritorio) ----------
       let composer: {
         render(): void;
         setSize(w: number, h: number): void;
@@ -114,11 +94,10 @@ export function HeroScene() {
         const { UnrealBloomPass } = await import("three/examples/jsm/postprocessing/UnrealBloomPass.js");
         const { OutputPass } = await import("three/examples/jsm/postprocessing/OutputPass.js");
         if (disposed) return;
-        // Render target con MSAA: sin él, el post-proceso pierde el antialiasing
-        const rt = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: 4 });
+        const rt = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType });
         const c = new EffectComposer(renderer, rt);
         c.addPass(new RenderPass(scene, camera));
-        c.addPass(new UnrealBloomPass(new THREE.Vector2(512, 512), 0.14, 0.35, 0.9));
+        c.addPass(new UnrealBloomPass(new THREE.Vector2(512, 512), 0.25, 0.5, 0.7));
         c.addPass(new OutputPass());
         composer = c;
       }
@@ -143,6 +122,8 @@ export function HeroScene() {
 
         const visibleH = 2 * CAMERA_Z * Math.tan(THREE.MathUtils.degToRad(FOV / 2));
         const worldPerPx = visibleH / h;
+        const toWorld = ([x, y]: [number, number]) =>
+          new THREE.Vector3((x - w / 2) * worldPerPx, -(y - h / 2) * worldPerPx, 0);
 
         const anchor = findAnchor();
         const mRect = mount.getBoundingClientRect();
@@ -151,45 +132,61 @@ export function HeroScene() {
         const cy = rect ? rect.top - mRect.top + rect.height / 2 : h * 0.5;
         const aw = rect?.width ?? w * 0.4;
         const ah = rect?.height ?? h * 0.7;
-        // ~38 % del alto del hero, siempre con aire dentro del ancla
-        const wide = aw < w * 0.7; // escritorio: ancla a la derecha del texto
-        const sizePx = wide ? Math.min(h * 0.58, ah * 1.0, aw * 0.95) : Math.min(h * 0.5, ah * 1.0, aw * 0.9);
-        const scale = sizePx * worldPerPx;
-        stage.scale.setScalar(scale);
-        stage.position.set((cx - w / 2) * worldPerPx, -(cy - h / 2) * worldPerPx, 0);
-
-        // Recorrido de la estela: entra por un borde, pasa por la escultura y
-        // sale por el otro, siempre por fuera de la zona de textos y botones.
         const top = cy - ah / 2;
         const left = cx - aw / 2;
-        const px: Array<[number, number]> = wide
-          ? [
-              [-0.08 * w, 0.98 * h],
-              [0.3 * w, 0.9 * h],
-              [left + 0.12 * aw, top + 0.92 * ah],
-              [cx, cy],
-              [left + 0.88 * aw, top + 0.06 * ah],
-              [0.9 * w, 0.03 * h],
-              [1.08 * w, -0.08 * h],
-            ]
-          : [
-              [-0.12 * w, top + 0.18 * ah],
-              [0.22 * w, top + 0.3 * ah],
-              [cx, cy],
-              [0.78 * w, top + 0.7 * ah],
-              [1.12 * w, top + 0.82 * ah],
-            ];
-        sculpture.setPath(
-          px.map(([x, y]) => new THREE.Vector3((x - w / 2) * worldPerPx, -(y - h / 2) * worldPerPx, 0)),
-          scale,
-        );
-        backdrop.position.x = stage.position.x;
-        backdrop.position.y = stage.position.y;
+        const wide = aw < w * 0.7; // escritorio: ancla a la derecha del texto
 
-        rim.position.set(stage.position.x + 2.2 * scale, stage.position.y + 1.4 * scale, -3);
-        rim.target.position.copy(stage.position);
+        if (wide) {
+          // Columna que nace abajo, sube serpenteando y se abre arriba
+          smoke.setLayout({
+            plume: (
+              [
+                [cx, top + 1.08 * ah],
+                [cx + 0.03 * aw, top + 0.45 * ah],
+                [cx + 0.08 * aw, top - 0.14 * ah],
+              ] as Array<[number, number]>
+            ).map(toWorld),
+            plumeWidth: [0.22 * aw * worldPerPx, 1.0 * aw * worldPerPx],
+            // Estela: entra por abajo a la izquierda (bajo los botones), cruza
+            // la columna y sale por arriba a la derecha
+            trail: (
+              [
+                [-0.1 * w, 0.99 * h],
+                [0.38 * w, 0.93 * h],
+                [cx, cy],
+                [left + 0.95 * aw, top + 0.02 * ah],
+                [1.1 * w, -0.12 * h],
+              ] as Array<[number, number]>
+            ).map(toWorld),
+            trailWidth: 0.3 * aw * worldPerPx,
+            worldPerPx,
+          });
+        } else {
+          smoke.setLayout({
+            plume: (
+              [
+                [cx, top + 1.05 * ah],
+                [cx + 0.02 * aw, top + 0.5 * ah],
+                [cx + 0.04 * aw, top - 0.05 * ah],
+              ] as Array<[number, number]>
+            ).map(toWorld),
+            plumeWidth: [0.2 * aw * worldPerPx, 0.85 * aw * worldPerPx],
+            trail: (
+              [
+                [-0.15 * w, top + 0.22 * ah],
+                [cx, cy],
+                [1.15 * w, top + 0.78 * ah],
+              ] as Array<[number, number]>
+            ).map(toWorld),
+            trailWidth: 0.42 * ah * worldPerPx,
+            worldPerPx,
+          });
+        }
+        backdrop.position.x = (cx - w / 2) * worldPerPx;
+        backdrop.position.y = -(cy - h / 2) * worldPerPx;
+
         if (reduceMotion) {
-          sculpture.update(0);
+          smoke.update(8);
           draw();
         }
       };
@@ -201,7 +198,6 @@ export function HeroScene() {
       window.addEventListener("resize", place);
 
       // ---------- Animación ----------
-
       let visible = true;
       const io = new IntersectionObserver(([entry]) => (visible = entry.isIntersecting), { threshold: 0 });
       io.observe(mount);
@@ -226,6 +222,7 @@ export function HeroScene() {
           pixelRatio = Math.max(1, pixelRatio - 0.5);
           renderer.setPixelRatio(pixelRatio);
           composer?.setPixelRatio(pixelRatio);
+          smoke.setPixelRatio(pixelRatio);
           place();
         } else if (composer) {
           composer.dispose();
@@ -234,7 +231,7 @@ export function HeroScene() {
       };
 
       let raf = 0;
-      let elapsed = 0;
+      let elapsed = 8; // empieza con el humo ya formado
       let last = performance.now();
       const frame = (now: number) => {
         raf = requestAnimationFrame(frame);
@@ -242,18 +239,18 @@ export function HeroScene() {
         last = now;
         if (!visible || document.hidden) return;
         elapsed += dt;
-        sculpture.update(elapsed);
+        smoke.update(elapsed);
         draw();
         adapt(now);
       };
 
       if (reduceMotion) {
-        sculpture.update(0);
+        smoke.update(elapsed);
         draw();
       } else {
         raf = requestAnimationFrame(frame);
       }
-      mount.dataset.heroModel = "fragrance-sculpture";
+      mount.dataset.heroModel = "golden-smoke";
       setReady(true);
 
       cleanup = () => {
@@ -261,13 +258,11 @@ export function HeroScene() {
         io.disconnect();
         ro.disconnect();
         window.removeEventListener("resize", place);
-        sculpture.dispose();
+        smoke.dispose();
         backdrop.geometry.dispose();
         (backdrop.material as T.MeshBasicMaterial).dispose();
         bgTex.dispose();
         composer?.dispose();
-        envTexture.dispose();
-        pmrem.dispose();
         renderer.dispose();
         renderer.domElement.remove();
       };
