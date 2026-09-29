@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 
 /**
- * Escena 3D del hero: frasco de perfume de cristal con líquido ámbar,
- * tapón dorado facetado y partículas doradas (bruma de perfume).
+ * Escena 3D del hero: frasco de Afnan 9PM Night Out (cristal negro moteado,
+ * "9" plateado, tapón esférico facetado) y partículas doradas (bruma).
  * - three.js se carga bajo demanda (no bloquea la primera pintura).
  * - Se pausa fuera de pantalla / pestaña oculta.
  * - Respeta "reducir movimiento" (un único fotograma estático).
@@ -25,7 +25,6 @@ export function HeroScene() {
       if (!probe.getContext("webgl2") && !probe.getContext("webgl")) return;
 
       const THREE = await import("three");
-      const { RoundedBoxGeometry } = await import("three/examples/jsm/geometries/RoundedBoxGeometry.js");
       const { RoomEnvironment } = await import("three/examples/jsm/environments/RoomEnvironment.js");
       if (disposed) return;
 
@@ -67,89 +66,173 @@ export function HeroScene() {
       glow.position.set(0, 0.1, -4);
       scene.add(glow);
 
-      // ---------- Frasco ----------
+      // ---------- Frasco: Afnan 9PM Night Out ----------
+      // Frasco plano rectangular con hombros redondeados, cristal negro
+      // moteado (efecto granito), gran "9" plateado y tapón esférico facetado.
       const bottle = new THREE.Group();
       scene.add(bottle);
 
-      const glass = new THREE.MeshPhysicalMaterial({
+      const bodyFont =
+        getComputedStyle(document.documentElement).getPropertyValue("--font-inter").trim() || "Arial, sans-serif";
+      const displayFont =
+        getComputedStyle(document.documentElement).getPropertyValue("--font-cormorant").trim() || "Georgia, serif";
+      await Promise.all([
+        document.fonts.load(`600 100px ${displayFont}`),
+        document.fonts.load(`500 100px ${bodyFont}`),
+        document.fonts.load(`italic 500 100px ${displayFont}`),
+      ]).catch(() => undefined);
+      if (disposed) return;
+
+      // Textura moteada (granito oscuro con destellos)
+      const speckCanvas = document.createElement("canvas");
+      speckCanvas.width = speckCanvas.height = 512;
+      const sc = speckCanvas.getContext("2d")!;
+      sc.fillStyle = "#121214";
+      sc.fillRect(0, 0, 512, 512);
+      for (let i = 0; i < 7000; i++) {
+        const v = Math.random();
+        const shade = v < 0.7 ? 18 + Math.random() * 18 : v < 0.95 ? 45 + Math.random() * 35 : 150 + Math.random() * 100;
+        sc.fillStyle = `rgba(${shade},${shade},${shade + 3},${0.3 + Math.random() * 0.6})`;
+        const r = Math.random() < 0.92 ? 0.5 + Math.random() * 1 : 1.4 + Math.random() * 1.4;
+        sc.beginPath();
+        sc.arc(Math.random() * 512, Math.random() * 512, r, 0, Math.PI * 2);
+        sc.fill();
+      }
+      const speckTex = new THREE.CanvasTexture(speckCanvas);
+      speckTex.colorSpace = THREE.SRGBColorSpace;
+      speckTex.wrapS = speckTex.wrapT = THREE.RepeatWrapping;
+      speckTex.repeat.set(1.4, 1.4);
+      const bumpTex = new THREE.CanvasTexture(speckCanvas);
+      bumpTex.wrapS = bumpTex.wrapT = THREE.RepeatWrapping;
+      bumpTex.repeat.set(1.4, 1.4);
+
+      const W = 1.2;
+      const H = 1.72;
+      const D = 0.42;
+      const shoulder = 0.34;
+      const foot = 0.08;
+      const shape = new THREE.Shape();
+      shape.moveTo(-W / 2 + foot, -H / 2);
+      shape.lineTo(W / 2 - foot, -H / 2);
+      shape.quadraticCurveTo(W / 2, -H / 2, W / 2, -H / 2 + foot);
+      shape.lineTo(W / 2, H / 2 - shoulder);
+      shape.quadraticCurveTo(W / 2, H / 2, W / 2 - shoulder, H / 2);
+      shape.lineTo(-W / 2 + shoulder, H / 2);
+      shape.quadraticCurveTo(-W / 2, H / 2, -W / 2, H / 2 - shoulder);
+      shape.lineTo(-W / 2, -H / 2 + foot);
+      shape.quadraticCurveTo(-W / 2, -H / 2, -W / 2 + foot, -H / 2);
+      const bevel = 0.05;
+      const bodyGeo = new THREE.ExtrudeGeometry(shape, {
+        depth: D - bevel * 2,
+        bevelEnabled: true,
+        bevelThickness: bevel,
+        bevelSize: bevel,
+        bevelSegments: 6,
+        curveSegments: 24,
+      });
+      bodyGeo.translate(0, 0, -(D - bevel * 2) / 2);
+      const granite = new THREE.MeshPhysicalMaterial({
         color: 0xffffff,
-        metalness: 0,
-        roughness: 0.02,
-        transmission: 1,
-        thickness: 0.35,
-        ior: 1.52,
+        map: speckTex,
+        bumpMap: bumpTex,
+        bumpScale: 0.6,
+        metalness: 0.2,
+        roughness: 0.45,
         clearcoat: 1,
         clearcoatRoughness: 0.05,
-        attenuationColor: new THREE.Color(0xf3e3bd),
-        attenuationDistance: 4,
-        envMapIntensity: 2.2,
-        specularIntensity: 1,
+        envMapIntensity: 1.1,
       });
-      const body = new THREE.Mesh(new RoundedBoxGeometry(1.25, 1.6, 0.62, 6, 0.14), glass);
+      const body = new THREE.Mesh(bodyGeo, granite);
       bottle.add(body);
 
-      const liquid = new THREE.Mesh(
-        new RoundedBoxGeometry(1.05, 1.18, 0.44, 4, 0.1),
-        new THREE.MeshPhysicalMaterial({
-          color: 0xc27a1c,
-          roughness: 0.1,
-          transmission: 0.35,
-          thickness: 0.4,
-          ior: 1.33,
-          emissive: new THREE.Color(0x6a3500),
-          emissiveIntensity: 0.55,
-        }),
-      );
-      liquid.position.y = -0.14;
-      bottle.add(liquid);
-
-      // Etiqueta con la marca
+      // Etiqueta frontal: gran "9" plateado, "pm" vertical, "Night Out", AFNAN
       const labelCanvas = document.createElement("canvas");
-      labelCanvas.width = 1024;
-      labelCanvas.height = 256;
+      labelCanvas.width = 640;
+      labelCanvas.height = 920;
       const lc = labelCanvas.getContext("2d")!;
-      lc.clearRect(0, 0, 1024, 256);
-      lc.fillStyle = "rgba(10,10,10,0.82)";
-      lc.fillRect(40, 48, 944, 160);
-      lc.strokeStyle = "#c5a25a";
-      lc.lineWidth = 4;
-      lc.strokeRect(56, 64, 912, 128);
-      lc.fillStyle = "#e3cc93";
-      lc.font = "500 84px 'Cormorant Garamond', Georgia, serif";
+      lc.clearRect(0, 0, 640, 920);
+      const silver = lc.createLinearGradient(0, 80, 0, 760);
+      silver.addColorStop(0, "#f4f1ea");
+      silver.addColorStop(0.45, "#cfcac0");
+      silver.addColorStop(0.55, "#9d978d");
+      silver.addColorStop(1, "#e7e3da");
+      lc.fillStyle = silver;
       lc.textAlign = "center";
-      lc.textBaseline = "middle";
-      if ("letterSpacing" in lc) (lc as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = "18px";
-      lc.fillText("SMELLCLUB", 512, 132);
+      lc.textBaseline = "alphabetic";
+      // "9" alto (cifra de caja alta, estirada verticalmente como en el frasco)
+      lc.save();
+      lc.translate(340, 640);
+      lc.scale(1.05, 1.45);
+      lc.font = `500 440px ${bodyFont}`;
+      lc.fillText("9", 0, 0);
+      lc.restore();
+      lc.save();
+      lc.translate(205, 470);
+      lc.rotate(-Math.PI / 2);
+      lc.font = `italic 500 96px ${displayFont}`;
+      lc.fillText("pm", 0, 0);
+      lc.restore();
+      lc.font = `italic 500 78px ${displayFont}`;
+      lc.fillText("Night Out", 320, 735);
+      lc.fillStyle = "#d8d3c9";
+      lc.font = `600 34px ${displayFont}`;
+      if ("letterSpacing" in lc) (lc as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = "10px";
+      lc.fillText("AFNAN", 320, 810);
+      lc.font = `500 20px ${displayFont}`;
+      lc.fillText("EAU DE PARFUM", 320, 850);
       const labelTex = new THREE.CanvasTexture(labelCanvas);
       labelTex.colorSpace = THREE.SRGBColorSpace;
-      labelTex.anisotropy = 4;
-      const label = new THREE.Mesh(
-        new THREE.PlaneGeometry(1.0, 0.25),
-        new THREE.MeshStandardMaterial({ map: labelTex, transparent: true, roughness: 0.4, metalness: 0.2 }),
-      );
-      label.position.set(0, -0.12, 0.315);
+      labelTex.anisotropy = 8;
+      const labelMat = new THREE.MeshStandardMaterial({
+        map: labelTex,
+        transparent: true,
+        metalness: 0.85,
+        roughness: 0.28,
+        envMapIntensity: 1.8,
+      });
+      const label = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 1.3), labelMat);
+      label.position.set(0, -0.12, D / 2 + 0.002);
       bottle.add(label);
+      const labelBack = label.clone();
+      labelBack.position.z = -(D / 2 + 0.002);
+      labelBack.rotation.y = Math.PI;
+      bottle.add(labelBack);
 
-      const gold = new THREE.MeshStandardMaterial({ color: 0xc9a45c, metalness: 1, roughness: 0.22, envMapIntensity: 1.6 });
-      const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.2, 0.18, 32), gold);
-      neck.position.y = 0.89;
+      // Cuello y tapón esférico facetado (metal oscuro)
+      const gunmetal = new THREE.MeshStandardMaterial({
+        color: 0x3b3b3e,
+        metalness: 0.9,
+        roughness: 0.35,
+        bumpMap: bumpTex,
+        bumpScale: 0.4,
+        envMapIntensity: 1.6,
+      });
+      const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.16, 0.14, 32), gunmetal);
+      neck.position.y = H / 2 + 0.06;
       bottle.add(neck);
-      const collar = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.035, 16, 48), gold);
-      collar.rotation.x = Math.PI / 2;
-      collar.position.y = 0.98;
-      bottle.add(collar);
-      // Tapón facetado (estilo perfumería árabe)
-      const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.36, 0.62, 8, 1), gold);
-      cap.position.y = 1.32;
+      const cap = new THREE.Mesh(
+        new THREE.SphereGeometry(0.27, 40, 28),
+        new THREE.MeshPhysicalMaterial({
+          color: 0xffffff,
+          map: speckTex,
+          bumpMap: bumpTex,
+          bumpScale: 0.8,
+          metalness: 0.45,
+          roughness: 0.4,
+          clearcoat: 0.8,
+          clearcoatRoughness: 0.15,
+          envMapIntensity: 1.3,
+        }),
+      );
+      cap.position.y = H / 2 + 0.36;
       bottle.add(cap);
-      const capTop = new THREE.Mesh(new THREE.SphereGeometry(0.3, 8, 6, 0, Math.PI * 2, 0, Math.PI / 2), gold);
-      capTop.scale.set(1, 0.45, 1);
-      capTop.position.y = 1.63;
-      bottle.add(capTop);
+      bottle.position.y = 0;
+      // Centra el conjunto verticalmente
+      bottle.children.forEach((c) => (c.position.y -= 0.2));
 
       // ---------- Luces ----------
       scene.add(new THREE.AmbientLight(0xffffff, 0.25));
-      const key = new THREE.DirectionalLight(0xffe7b8, 2.4);
+      const key = new THREE.DirectionalLight(0xfff0d6, 3.2);
       key.position.set(3, 4, 5);
       scene.add(key);
       const rim = new THREE.PointLight(0xc5a25a, 18, 12);
