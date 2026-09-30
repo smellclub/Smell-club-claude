@@ -77,7 +77,7 @@ export const siteConfig = {
 
   /** Texto informativo sobre envíos en el checkout. */
   shippingNote:
-    "El coste y el plazo de envío se confirman contigo al validar el pedido.",
+    "El costo y el plazo de envío se confirman contigo al validar el pedido.",
 
   nav: [
     { label: "Tienda", href: "/shop" },

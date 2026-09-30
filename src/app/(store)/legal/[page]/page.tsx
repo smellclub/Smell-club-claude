@@ -124,12 +124,12 @@ const pages: Record<string, LegalPage> = {
   },
   "envios-y-devoluciones": {
     title: "Envíos y devoluciones",
-    description: "Plazos, costes de envío y política de devoluciones.",
+    description: "Plazos, costos de envío y política de devoluciones.",
     sections: [
       {
         title: "Envíos",
         body: [
-          "El coste, el plazo y el método de envío dependen del destino y se confirman contigo antes de cerrar el pedido.",
+          "El costo, el plazo y el método de envío dependen del destino y se confirman contigo antes de cerrar el pedido.",
           "También puedes elegir recogida o entrega en mano al hacer el pedido.",
         ],
       },
