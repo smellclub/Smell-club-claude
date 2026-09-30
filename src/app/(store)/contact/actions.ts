@@ -16,7 +16,9 @@ export async function sendContactMessage(_prev: ActionState, formData: FormData)
   }
 
   const ipHash = await getClientIpHash();
-  if (!(await rateLimit("contact", ipHash, 3, 900))) {
+  const limit = await rateLimit("contact", ipHash, 3, 900);
+  if (limit === "unavailable") return { ok: false, message: "No se pudo enviar el mensaje. Inténtalo más tarde." };
+  if (limit === "limited") {
     return { ok: false, message: "Has enviado varios mensajes seguidos. Inténtalo más tarde." };
   }
 

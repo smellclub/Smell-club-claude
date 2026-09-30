@@ -63,8 +63,14 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
 
   // Rate limit tras validar (los errores de formulario no consumen intentos)
   const ipHash = await getClientIpHash();
-  const allowed = await rateLimit("checkout", ipHash, 5, 600);
-  if (!allowed) {
+  const limit = await rateLimit("checkout", ipHash, 5, 600);
+  if (limit === "unavailable") {
+    return {
+      status: "error",
+      message: "No pudimos procesar tu pedido en este momento. Inténtalo de nuevo en unos minutos o escríbenos por WhatsApp.",
+    };
+  }
+  if (limit === "limited") {
     return {
       status: "error",
       message: "Has realizado varios pedidos seguidos. Espera unos minutos o escríbenos por WhatsApp.",

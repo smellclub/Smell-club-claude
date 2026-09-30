@@ -28,27 +28,35 @@ export async function getClientIpHash(): Promise<string> {
 
 /**
  * Rate limiting persistente en PostgreSQL (funciona en serverless).
- * Devuelve true si se permite la acción. Si algo falla → bloquea
- * (fail-closed) para no dejar la puerta abierta a abusos.
+ *  - "ok": se permite la acción.
+ *  - "limited": el visitante superó el límite de intentos.
+ *  - "unavailable": no se pudo comprobar (falta SUPABASE_SECRET_KEY o la
+ *    base de datos falló). Se bloquea igual (fail-closed), pero el mensaje
+ *    no debe culpar al visitante.
  */
+export type RateLimitResult = "ok" | "limited" | "unavailable";
+
 export async function rateLimit(
   action: string,
   identifier: string,
   max: number,
   windowSeconds: number,
-): Promise<boolean> {
+): Promise<RateLimitResult> {
   const supabase = getServiceSupabase();
-  if (!supabase) return false;
+  if (!supabase) {
+    console.error("[rate-limit] Falta SUPABASE_SECRET_KEY o NEXT_PUBLIC_SUPABASE_URL en el servidor");
+    return "unavailable";
+  }
   const { data, error } = await supabase.rpc("rate_limit_hit", {
     p_key: `${action}:${identifier}`,
     p_max: max,
     p_window_seconds: windowSeconds,
   });
   if (error) {
-    console.error("[rate-limit] error", error.code);
-    return false;
+    console.error("[rate-limit] error", error.code, error.message);
+    return "unavailable";
   }
-  return data === true;
+  return data === true ? "ok" : "limited";
 }
 
 /** Campo trampa anti-bots: si viene relleno, es un bot. */

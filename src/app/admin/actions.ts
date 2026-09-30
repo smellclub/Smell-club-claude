@@ -21,11 +21,14 @@ export async function loginAction(_prev: ActionState, formData: FormData): Promi
   if (!parsed.success) return { ok: false, message: INVALID };
 
   const ipHash = await getClientIpHash();
-  const [ipOk, emailOk] = await Promise.all([
+  const limits = await Promise.all([
     rateLimit("login-ip", ipHash, 10, 900),
     rateLimit("login-email", hashIdentifier(parsed.data.email), 5, 900),
   ]);
-  if (!ipOk || !emailOk) {
+  if (limits.includes("unavailable")) {
+    return { ok: false, message: "El panel no está configurado todavía (falta SUPABASE_SECRET_KEY en el servidor)." };
+  }
+  if (limits.includes("limited")) {
     return { ok: false, message: "Demasiados intentos. Espera 15 minutos y vuelve a intentarlo." };
   }
 
