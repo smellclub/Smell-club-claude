@@ -68,11 +68,11 @@ export const siteConfig = {
 
   /** Datos legales del titular. Vacío = no se muestra esa línea. */
   legal: {
-    ownerName: "", // Nombre o razón social
-    taxId: "", // NIF / CIF / RUT / RFC
-    address: "", // Dirección fiscal
-    jurisdiction: "", // País cuya legislación aplica
-    lastUpdated: "septiembre de 2026",
+    ownerName: "", // Nombre o razón social (como figura en DGI)
+    taxId: "", // RUT
+    address: "", // Domicilio fiscal
+    jurisdiction: "la República Oriental del Uruguay",
+    lastUpdated: "octubre de 2026",
   },
 
   /** Texto informativo sobre envíos en el checkout. */

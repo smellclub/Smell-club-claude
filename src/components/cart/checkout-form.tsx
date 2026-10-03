@@ -180,7 +180,8 @@ export function CheckoutForm() {
             label={
               <>
                 Acepto los <Link href="/legal/terminos" target="_blank" className="underline">términos</Link> y la{" "}
-                <Link href="/legal/privacidad" target="_blank" className="underline">política de privacidad</Link>.
+                <Link href="/legal/privacidad" target="_blank" className="underline">política de privacidad</Link>, incluido el tratamiento
+                de mis datos en servidores fuera de Uruguay para gestionar el pedido.
               </>
             }
           />

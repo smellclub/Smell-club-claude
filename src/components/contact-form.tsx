@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { startTransition, useActionState } from "react";
 import { sendContactMessage } from "@/app/(store)/contact/actions";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,13 @@ export function ContactForm() {
       </div>
       <TextAreaField label="Mensaje" name="message" required maxLength={2000} rows={5} error={errors.message} />
       <p className="text-xs text-muted">Indica al menos un email o un teléfono para poder responderte.</p>
+      <p className="text-xs text-muted">
+        Al enviar el mensaje aceptas la{" "}
+        <Link href="/legal/privacidad" className="underline hover:text-ink">
+          política de privacidad
+        </Link>
+        . Usamos tus datos solo para responderte.
+      </p>
       <Button type="submit" size="lg" disabled={pending}>
         {pending ? "Enviando…" : "Enviar mensaje"}
       </Button>

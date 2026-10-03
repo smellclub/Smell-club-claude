@@ -61,6 +61,7 @@ export function Footer() {
           <p className="eyebrow text-gold">Información</p>
           <ul className="mt-4 space-y-1 text-sm text-ivory/70">
             <li><Link href="/legal/envios-y-devoluciones" className="inline-block py-1.5 hover:text-gold-light">Envíos y devoluciones</Link></li>
+            <li><Link href="/legal/envios-y-devoluciones#arrepentimiento" className="inline-block py-1.5 hover:text-gold-light">Derecho de arrepentimiento</Link></li>
             <li><Link href="/legal/terminos" className="inline-block py-1.5 hover:text-gold-light">Términos y condiciones</Link></li>
             <li><Link href="/legal/privacidad" className="inline-block py-1.5 hover:text-gold-light">Política de privacidad</Link></li>
             <li><Link href="/legal/aviso-legal" className="inline-block py-1.5 hover:text-gold-light">Aviso legal</Link></li>
@@ -75,7 +76,10 @@ export function Footer() {
       </p>
       <div className="border-t border-ink-line">
         <div className="mx-auto flex max-w-7xl flex-col gap-2 px-5 py-6 text-xs text-ivory/40 sm:flex-row sm:justify-between sm:px-8">
-          <p>© {year} {siteConfig.name}. Todos los derechos reservados.</p>
+          <p>
+            © {year} {siteConfig.legal.ownerName || siteConfig.name}
+            {siteConfig.legal.taxId ? ` · RUT ${siteConfig.legal.taxId}` : ""}. Todos los derechos reservados.
+          </p>
           <p>Las marcas citadas pertenecen a sus respectivos propietarios.</p>
         </div>
       </div>
