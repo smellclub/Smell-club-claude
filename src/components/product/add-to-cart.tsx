@@ -108,7 +108,7 @@ export function AddToCart({ productId, slug, name, brand, image, variants, whats
           ) : selected.stock <= 0 ? (
             <span className="text-danger">Agotado temporalmente</span>
           ) : selected.stock <= LOW_STOCK_THRESHOLD ? (
-            <span className="text-gold-dark">¡Quedan solo {selected.stock}!</span>
+            <span className="text-gold-dark">Quedan solo {selected.stock}</span>
           ) : (
             <span className="text-success">Disponible</span>
           )}

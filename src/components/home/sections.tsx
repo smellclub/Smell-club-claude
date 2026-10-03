@@ -186,21 +186,27 @@ export function CategoriesSection({ categories }: { categories: Category[] }) {
   return (
     <section className="py-20 sm:py-28">
       <Container>
-        <SectionHeading eyebrow="Colecciones" title="Explora por categoría" />
-        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <SectionHeading eyebrow="Colecciones" title="Explora por categoría" align="left" />
+        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:grid-rows-2">
           {tiles.map((t, i) => (
             <Link
               key={t.href}
               href={t.href}
               data-reveal="scale"
               style={{ "--i": i } as React.CSSProperties}
-              className="spotlight group relative flex min-h-48 flex-col justify-end overflow-hidden bg-ink p-7 text-ivory transition-transform duration-500 hover:-translate-y-1 sm:min-h-72"
+              className={`spotlight group relative flex min-h-48 flex-col justify-end overflow-hidden bg-ink p-7 text-ivory transition-transform duration-500 hover:-translate-y-1 sm:min-h-64 ${
+                i === 0 ? "sm:col-span-2 lg:row-span-2 lg:min-h-[34rem] lg:p-10" : ""
+              }`}
             >
               <div
                 aria-hidden="true"
                 className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_80%_20%,rgba(197,162,90,0.25),transparent_55%)] opacity-60 transition-opacity duration-500 group-hover:opacity-100"
               />
-              <div aria-hidden="true" className="gold-dust -z-10 opacity-0 transition-opacity duration-700 group-hover:opacity-100" />
+              {i === 0 && <div aria-hidden="true" className="aurora -z-10 opacity-70" />}
+              <div
+                aria-hidden="true"
+                className={`gold-dust -z-10 transition-opacity duration-700 group-hover:opacity-100 ${i === 0 ? "opacity-70" : "opacity-0"}`}
+              />
               <span className="text-outline absolute top-4 right-6 font-display text-7xl transition-all duration-700 group-hover:scale-110 group-hover:[-webkit-text-stroke-color:rgb(197_162_90/0.8)] sm:text-8xl">
                 0{i + 1}
               </span>
@@ -209,7 +215,7 @@ export function CategoriesSection({ categories }: { categories: Category[] }) {
                 className="absolute inset-x-7 bottom-0 h-px origin-left scale-x-0 bg-gradient-to-r from-gold via-gold-light to-transparent transition-transform duration-700 group-hover:scale-x-100"
               />
               <div className="relative transition-transform duration-500 group-hover:-translate-y-1">
-                <h3 className="font-display text-3xl sm:text-4xl">{t.title}</h3>
+                <h3 className={`font-display ${i === 0 ? "text-4xl sm:text-6xl" : "text-3xl sm:text-4xl"}`}>{t.title}</h3>
                 <p className="mt-2 flex items-center gap-2 text-sm text-ivory/60 transition-colors group-hover:text-gold-light">
                   {t.text} <ArrowRightIcon size={16} className="transition-transform duration-300 group-hover:translate-x-1.5" />
                 </p>
@@ -242,20 +248,32 @@ export function ProductsSection({
   if (products.length === 0) return null;
   return (
     <section className={tone === "sand" ? "relative overflow-hidden bg-sand py-20 sm:py-28" : "relative overflow-hidden py-20 sm:py-28"}>
-      {title.length <= 12 && (
-        <span
-          aria-hidden="true"
-          className="text-outline pointer-events-none absolute -top-4 left-1/2 -translate-x-1/2 font-display text-[22vw] leading-none whitespace-nowrap opacity-60 select-none sm:text-[14vw]"
-        >
-          {title}
-        </span>
-      )}
       <Container className="relative">
-        <SectionHeading eyebrow={eyebrow} title={title} description={description} />
+        {title.length <= 12 && (
+          <span
+            aria-hidden="true"
+            className="text-outline pointer-events-none absolute -top-16 left-0 font-display text-[22vw] leading-none whitespace-nowrap opacity-60 select-none sm:-top-24 sm:left-[30%] sm:text-[12vw]"
+          >
+            {title}
+          </span>
+        )}
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+          <SectionHeading eyebrow={eyebrow} title={title} description={description} align="left" />
+          <Link
+            href={href}
+            data-reveal
+            className="group hidden shrink-0 items-center gap-2 pb-2 text-sm font-medium text-ink sm:inline-flex"
+          >
+            <span className="border-b border-ink/30 pb-0.5 transition-colors group-hover:border-gold group-hover:text-gold-dark">
+              {linkLabel}
+            </span>
+            <ArrowRightIcon size={16} className="transition-transform duration-300 group-hover:translate-x-1" />
+          </Link>
+        </div>
         <div className="mt-12">
           <ProductRail products={products} />
         </div>
-        <div data-reveal className="mt-12 flex justify-center">
+        <div data-reveal className="mt-10 flex justify-center sm:hidden">
           <ButtonLink href={href} variant="outline">
             {linkLabel} <ArrowRightIcon size={16} />
           </ButtonLink>
@@ -319,25 +337,37 @@ export function BenefitsSection() {
   return (
     <section className="border-y border-line py-20 sm:py-24">
       <Container>
-        <SectionHeading eyebrow="Por qué Smellclub" title="Comprar perfume, sin dudas" />
-        <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {siteConfig.benefits.map((b, i) => {
-            const Icon = benefitIcons[b.icon as keyof typeof benefitIcons] ?? SparkleIcon;
-            return (
-              <div
-                key={b.title}
-                data-reveal
-                style={{ "--i": i } as React.CSSProperties}
-                className="group flex flex-col items-center border border-transparent px-6 py-8 text-center transition-all duration-500 hover:-translate-y-1 hover:border-gold/40 hover:bg-white hover:shadow-[0_24px_50px_-30px_rgba(140,109,47,0.6)]"
-              >
-                <span className="icon-orbit flex size-16 items-center justify-center rounded-full border border-gold/40 text-gold-dark transition-colors duration-500 group-hover:bg-ink group-hover:text-gold">
-                  <Icon size={26} />
-                </span>
-                <h3 className="mt-6 font-display text-2xl">{b.title}</h3>
-                <p className="mt-2 max-w-xs text-sm leading-relaxed text-muted">{b.text}</p>
-              </div>
-            );
-          })}
+        <div className="grid gap-12 lg:grid-cols-12 lg:gap-16">
+          <div className="lg:sticky lg:top-32 lg:col-span-5 lg:self-start">
+            <SectionHeading
+              eyebrow="Por qué Smellclub"
+              title="Comprar perfume, sin dudas"
+              description="Lo que hacemos para que elijas tranquilo y aciertes con tu fragancia."
+              align="left"
+            />
+          </div>
+          <ol className="flex flex-col border-t border-line lg:col-span-7">
+            {siteConfig.benefits.map((b, i) => {
+              const Icon = benefitIcons[b.icon as keyof typeof benefitIcons] ?? SparkleIcon;
+              return (
+                <li
+                  key={b.title}
+                  data-reveal="right"
+                  style={{ "--i": i } as React.CSSProperties}
+                  className="group grid grid-cols-[auto_1fr] items-start gap-x-6 gap-y-2 border-b border-line py-8 transition-colors duration-500 hover:bg-white sm:grid-cols-[4rem_auto_1fr] sm:px-4"
+                >
+                  <span className="hidden font-display text-4xl leading-none text-gold/70 tabular-nums sm:block">0{i + 1}</span>
+                  <span className="icon-orbit flex size-14 items-center justify-center rounded-full border border-gold/40 text-gold-dark transition-colors duration-500 group-hover:bg-ink group-hover:text-gold">
+                    <Icon size={24} />
+                  </span>
+                  <div>
+                    <h3 className="font-display text-2xl sm:text-3xl">{b.title}</h3>
+                    <p className="mt-2 max-w-md text-sm leading-relaxed text-muted">{b.text}</p>
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
         </div>
       </Container>
     </section>

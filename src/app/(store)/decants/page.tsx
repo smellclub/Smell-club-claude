@@ -59,19 +59,18 @@ export default async function DecantsPage({ searchParams }: PageProps<"/decants"
       </Container>
 
       <section className="border-t border-line bg-sand py-16 sm:py-20">
-        <Container className="max-w-3xl">
-          <SectionHeading eyebrow="Preguntas frecuentes" title="Todo sobre los decants" />
-          <div className="mt-10 divide-y divide-line border-y border-line">
-            {faqs.map((f, i) => (
-              <details key={f.q} data-reveal style={{ "--i": i } as React.CSSProperties} className="group py-5 [&_summary::-webkit-details-marker]:hidden">
-                <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 font-display text-xl">
-                  {f.q}
-                  <span className="text-gold transition-transform group-open:rotate-45" aria-hidden="true">+</span>
-                </summary>
-                <p className="mt-3 text-sm leading-relaxed text-muted">{f.a}</p>
-              </details>
-            ))}
+        <Container className="grid gap-12 lg:grid-cols-12">
+          <div className="lg:col-span-4">
+            <SectionHeading eyebrow="Preguntas frecuentes" title="Todo sobre los decants" align="left" />
           </div>
+          <dl className="grid gap-10 sm:grid-cols-2 lg:col-span-8">
+            {faqs.map((f, i) => (
+              <div key={f.q} data-reveal style={{ "--i": i } as React.CSSProperties} className="border-t border-gold/40 pt-6">
+                <dt className="font-display text-2xl">{f.q}</dt>
+                <dd className="mt-3 text-sm leading-relaxed text-muted">{f.a}</dd>
+              </div>
+            ))}
+          </dl>
         </Container>
       </section>
     </>

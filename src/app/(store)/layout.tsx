@@ -25,6 +25,7 @@ export default function StoreLayout({ children }: { children: React.ReactNode })
       <Footer />
       <CartToast />
       <FxRuntime />
+      <div aria-hidden="true" className="grain" />
       {wa && <WhatsAppFab href={wa} />}
     </CartProvider>
   );

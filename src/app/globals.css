@@ -14,7 +14,7 @@
   --color-danger: #b42318;
   --color-success: #1f7a4d;
 
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-display: var(--font-cormorant), ui-serif, Georgia, "Times New Roman", serif;
 
   --tracking-luxe: 0.28em;
@@ -51,6 +51,22 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+  }
+
+  /* Titulares equilibrados y párrafos sin palabras sueltas */
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  p,
+  li,
+  blockquote {
+    text-wrap: pretty;
+  }
+  h1.font-display,
+  h2.font-display {
+    letter-spacing: -0.012em;
   }
 
   ::selection {
@@ -526,5 +542,18 @@
   .text-outline {
     color: transparent;
     -webkit-text-stroke: 1px rgb(197 162 90 / 0.35);
+  }
+}
+
+@layer components {
+  /* Grano de película muy sutil sobre toda la tienda (rompe lo "plano") */
+  .grain {
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+    pointer-events: none;
+    opacity: 0.045;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
 }

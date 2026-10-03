@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { ButtonLink } from "@/components/ui/button";
 
 export default function NotFound() {
   return (
@@ -7,12 +7,12 @@ export default function NotFound() {
       <h1 className="font-display text-5xl">Esta página se ha evaporado</h1>
       <p className="max-w-sm text-sm text-ivory/60">La página que buscas no existe o ha cambiado de dirección.</p>
       <div className="flex gap-3">
-        <Link href="/" className="inline-flex min-h-12 items-center bg-gold px-6 text-[0.72rem] font-medium tracking-[0.18em] text-ink uppercase">
+        <ButtonLink href="/" variant="gold">
           Inicio
-        </Link>
-        <Link href="/shop" className="inline-flex min-h-12 items-center border border-ivory/30 px-6 text-[0.72rem] font-medium tracking-[0.18em] uppercase">
+        </ButtonLink>
+        <ButtonLink href="/shop" variant="outline-light">
           Tienda
-        </Link>
+        </ButtonLink>
       </div>
     </main>
   );

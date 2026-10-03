@@ -1,12 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, Inter } from "next/font/google";
+import { Cormorant_Garamond, Geist } from "next/font/google";
 import { siteConfig } from "@/config/site";
 import { publicEnv } from "@/lib/env";
 import "./globals.css";
 
-const inter = Inter({
+const geist = Geist({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-geist",
   display: "swap",
 });
 
@@ -51,7 +51,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang={publicEnv.locale.split("-")[0]} className={`${inter.variable} ${cormorant.variable}`} suppressHydrationWarning>
+    <html lang={publicEnv.locale.split("-")[0]} className={`${geist.variable} ${cormorant.variable}`} suppressHydrationWarning>
       <head>
         {/* Activa las animaciones de aparición solo si hay JavaScript */}
         <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />

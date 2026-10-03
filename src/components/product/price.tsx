@@ -23,7 +23,7 @@ export function Price({
   return (
     <p className={cn("flex flex-wrap items-baseline gap-x-2", className)}>
       {from && <span className="text-xs text-muted">Desde</span>}
-      <span className={cn("font-medium", sizes[size])}>{formatPrice(cents)}</span>
+      <span className={cn("font-medium tabular-nums", sizes[size])}>{formatPrice(cents)}</span>
       {discount > 0 && compareAtCents && (
         <>
           <span className="text-xs text-muted line-through">

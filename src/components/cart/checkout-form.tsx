@@ -47,7 +47,7 @@ export function CheckoutForm() {
         <span className="flex size-16 items-center justify-center rounded-full bg-gold text-ink">
           <CheckIcon size={30} />
         </span>
-        <h2 className="font-display text-4xl">¡Pedido recibido!</h2>
+        <h2 className="font-display text-4xl">Pedido recibido</h2>
         <p className="text-sm text-muted">
           Tu número de pedido es <strong className="text-ink">{order.orderNumber}</strong>. Guárdalo: te contactaremos
           para confirmar disponibilidad, pago y entrega.

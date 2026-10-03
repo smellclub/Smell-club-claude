@@ -8,7 +8,7 @@ import type { ActionState } from "@/types/domain";
 
 export async function sendContactMessage(_prev: ActionState, formData: FormData): Promise<ActionState> {
   // A los bots se les responde "ok" para no darles pistas
-  if (isHoneypotFilled(formData)) return { ok: true, message: "¡Mensaje enviado! Te responderemos pronto." };
+  if (isHoneypotFilled(formData)) return { ok: true, message: "Mensaje enviado. Te responderemos pronto." };
 
   const parsed = contactSchema.safeParse(formToObject(formData));
   if (!parsed.success) {
@@ -38,5 +38,5 @@ export async function sendContactMessage(_prev: ActionState, formData: FormData)
     return { ok: false, message: "No se pudo enviar el mensaje. Inténtalo más tarde." };
   }
 
-  return { ok: true, message: "¡Mensaje enviado! Te responderemos lo antes posible." };
+  return { ok: true, message: "Mensaje enviado. Te responderemos lo antes posible." };
 }
