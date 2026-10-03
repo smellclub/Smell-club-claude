@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Container } from "@/components/ui/layout";
+import { Container, PageHeader } from "@/components/ui/layout";
 import { siteConfig } from "@/config/site";
 import { publicEnv } from "@/lib/env";
 
@@ -163,13 +163,12 @@ export default async function LegalPage({ params }: PageProps<"/legal/[page]">) 
   if (!data) notFound();
 
   return (
+    <>
+    <PageHeader eyebrow="Información legal" title={data.title} description={`Última actualización: ${legal.lastUpdated}`} />
     <Container className="max-w-3xl py-12 sm:py-16">
-      <p className="eyebrow text-gold-dark">Información legal</p>
-      <h1 className="mt-3 font-display text-4xl sm:text-5xl">{data.title}</h1>
-      <p className="mt-3 text-xs text-muted">Última actualización: {legal.lastUpdated}</p>
-      <div className="mt-10 flex flex-col gap-10">
+      <div className="flex flex-col gap-10">
         {data.sections.map((s) => (
-          <section key={s.title}>
+          <section key={s.title} data-reveal>
             <h2 className="font-display text-2xl">{s.title}</h2>
             <div className="mt-3 flex flex-col gap-3 text-sm leading-relaxed text-ink/80">
               {s.body.filter((p): p is string => Boolean(p)).map((p) => (
@@ -180,5 +179,6 @@ export default async function LegalPage({ params }: PageProps<"/legal/[page]">) 
         ))}
       </div>
     </Container>
+    </>
   );
 }

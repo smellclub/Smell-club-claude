@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { CheckoutForm } from "@/components/cart/checkout-form";
-import { Container, SectionHeading } from "@/components/ui/layout";
+import { Container, PageHeader } from "@/components/ui/layout";
 
 export const metadata: Metadata = {
   title: "Finalizar pedido",
@@ -9,11 +9,13 @@ export const metadata: Metadata = {
 
 export default function CheckoutPage() {
   return (
-    <Container className="py-12 sm:py-16">
-      <SectionHeading as="h1" eyebrow="Último paso" title="Finalizar pedido" />
-      <div className="mt-10">
-        <CheckoutForm />
-      </div>
-    </Container>
+    <>
+      <PageHeader eyebrow="Último paso" title="Finalizar pedido" />
+      <Container className="py-12 sm:py-16">
+        <div data-reveal>
+          <CheckoutForm />
+        </div>
+      </Container>
+    </>
   );
 }

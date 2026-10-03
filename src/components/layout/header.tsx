@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { siteConfig } from "@/config/site";
 import { useCart } from "@/components/cart/cart-provider";
 import { Logo } from "@/components/layout/logo";
@@ -14,6 +14,7 @@ export function Header({ whatsappHref, instagramHref }: { whatsappHref: string |
   const { count, hydrated } = useCart();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const progressRef = useRef<HTMLDivElement>(null);
 
   // Cierra el menú al navegar
   const [lastPath, setLastPath] = useState(pathname);
@@ -23,7 +24,12 @@ export function Header({ whatsappHref, instagramHref }: { whatsappHref: string |
   }
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
+    const onScroll = () => {
+      setScrolled(window.scrollY > 8);
+      // Barra dorada de progreso de lectura
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      progressRef.current?.style.setProperty("--progress", String(max > 0 ? Math.min(1, window.scrollY / max) : 0));
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -65,8 +71,9 @@ export function Header({ whatsappHref, instagramHref }: { whatsappHref: string |
             <Link
               key={item.href}
               href={item.href}
+              aria-current={pathname.startsWith(item.href) ? "page" : undefined}
               className={cn(
-                "eyebrow py-2 transition-colors",
+                "nav-link eyebrow py-2 transition-colors",
                 pathname.startsWith(item.href) ? "text-gold" : "text-ivory/80 hover:text-gold-light",
               )}
             >
@@ -86,13 +93,15 @@ export function Header({ whatsappHref, instagramHref }: { whatsappHref: string |
           >
             <BagIcon size={22} />
             {hydrated && count > 0 && (
-              <span className="absolute top-1.5 right-1 flex min-w-5 items-center justify-center rounded-full bg-gold px-1 text-[0.65rem] leading-5 font-semibold text-ink">
+              <span key={count} className="badge-pop absolute top-1.5 right-1 flex min-w-5 items-center justify-center rounded-full bg-gold px-1 text-[0.65rem] leading-5 font-semibold text-ink">
                 {count > 99 ? "99+" : count}
               </span>
             )}
           </Link>
         </div>
       </div>
+
+      <div ref={progressRef} aria-hidden="true" className="scroll-progress absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-gold-dark via-gold-light to-gold" />
 
       {open && (
         <div id="mobile-menu" className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true" aria-label="Menú">
@@ -105,12 +114,13 @@ export function Header({ whatsappHref, instagramHref }: { whatsappHref: string |
               </button>
             </div>
             <nav aria-label="Menú móvil" className="flex flex-1 flex-col px-6 pt-6">
-              {[{ label: "Inicio", href: "/" }, ...siteConfig.nav, { label: "Carrito", href: "/cart" }].map((item) => (
+              {[{ label: "Inicio", href: "/" }, ...siteConfig.nav, { label: "Carrito", href: "/cart" }].map((item, i) => (
                 <Link
                   key={item.href}
                   href={item.href}
+                  style={{ animationDelay: `${120 + i * 60}ms` }}
                   className={cn(
-                    "border-b border-ink-line py-4 font-display text-2xl",
+                    "animate-fade-up border-b border-ink-line py-4 font-display text-2xl transition-colors hover:text-gold-light",
                     pathname === item.href ? "text-gold" : "text-ivory",
                   )}
                 >

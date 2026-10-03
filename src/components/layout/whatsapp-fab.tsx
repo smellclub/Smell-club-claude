@@ -14,9 +14,10 @@ export function WhatsAppFab({ href }: { href: string }) {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Escríbenos por WhatsApp"
-      className="animate-fade-in fixed right-4 bottom-4 z-30 flex size-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-xl transition-transform hover:scale-105 sm:right-6 sm:bottom-6"
+      className="animate-fade-in fixed right-4 bottom-4 z-30 flex size-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-xl transition-transform hover:scale-110 sm:right-6 sm:bottom-6"
     >
-      <WhatsAppIcon size={28} />
+      <span aria-hidden="true" className="absolute inset-0 animate-ping rounded-full bg-[#25D366] opacity-30 [animation-duration:2.4s]" />
+      <WhatsAppIcon size={28} className="relative" />
     </a>
   );
 }

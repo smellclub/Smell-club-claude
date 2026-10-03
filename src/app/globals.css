@@ -228,3 +228,303 @@
     100% { background-position: 0 50%; }
   }
 }
+
+/* =====================================================================
+   Sistema de animaciones (rediseño)
+   ===================================================================== */
+@layer components {
+  /* ---------- Aparición al hacer scroll ----------
+     Solo se ocultan si JS está activo (clase .js en <html>); sin JS todo
+     se ve normal. ScrollReveal añade data-revealed al entrar en pantalla. */
+  .js [data-reveal] {
+    opacity: 0;
+    transform: translate3d(0, 34px, 0);
+    filter: blur(8px);
+    transition:
+      opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+      filter 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: calc(var(--i, 0) * 70ms);
+  }
+  .js [data-reveal="left"] { transform: translate3d(-48px, 0, 0); }
+  .js [data-reveal="right"] { transform: translate3d(48px, 0, 0); }
+  .js [data-reveal="scale"] { transform: scale(0.9); }
+  .js [data-reveal="clip"] {
+    filter: none;
+    transform: none;
+    clip-path: inset(0 0 100% 0);
+    transition: clip-path 1.1s cubic-bezier(0.77, 0, 0.18, 1), opacity 0.6s ease;
+    transition-delay: calc(var(--i, 0) * 70ms);
+  }
+  .js [data-reveal][data-revealed] {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    clip-path: inset(0 0 0 0);
+  }
+
+  /* Línea dorada que se dibuja */
+  .js [data-reveal] .gold-rule,
+  .js .gold-rule[data-reveal] {
+    transform: scaleX(0);
+    transition: transform 1.2s cubic-bezier(0.77, 0, 0.18, 1) 0.3s;
+  }
+  .js [data-revealed] .gold-rule,
+  .js .gold-rule[data-revealed] {
+    transform: scaleX(1);
+  }
+
+  /* ---------- Texto dorado animado ---------- */
+  .text-gold-shine {
+    background-image: linear-gradient(
+      100deg,
+      var(--color-gold-dark) 0%,
+      var(--color-gold) 25%,
+      #fff1c8 45%,
+      var(--color-gold-light) 55%,
+      var(--color-gold) 75%,
+      var(--color-gold-dark) 100%
+    );
+    background-size: 250% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: gold-shine 6s linear infinite;
+  }
+  @keyframes gold-shine {
+    from { background-position: 100% 0; }
+    to { background-position: -150% 0; }
+  }
+
+  /* ---------- Botones: destello que cruza + pulsación ---------- */
+  .btn-fx {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .btn-fx::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / 0.45) 50%, transparent 70%);
+    transform: translateX(-120%);
+    transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+  }
+  .btn-fx:hover::after { transform: translateX(120%); }
+  .btn-fx:active { transform: scale(0.97); }
+  .btn-fx svg { transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1); }
+  .btn-fx:hover svg:last-child { transform: translateX(3px); }
+
+  /* Botón dorado con halo que respira */
+  .btn-glow { animation: btn-glow 3.2s ease-in-out infinite; }
+  @keyframes btn-glow {
+    0%, 100% { box-shadow: 0 0 0 0 rgb(197 162 90 / 0), 0 10px 30px -12px rgb(197 162 90 / 0.6); }
+    50% { box-shadow: 0 0 0 6px rgb(197 162 90 / 0.12), 0 14px 44px -10px rgb(197 162 90 / 0.8); }
+  }
+
+  /* ---------- Enlaces del menú: subrayado que crece desde el centro ---------- */
+  .nav-link { position: relative; }
+  .nav-link::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    right: 50%;
+    bottom: 2px;
+    height: 1px;
+    background: var(--color-gold);
+    transition: left 0.4s cubic-bezier(0.22, 1, 0.36, 1), right 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .nav-link:hover::after,
+  .nav-link[aria-current="page"]::after { left: 0; right: 0; }
+
+  /* Contador del carrito que rebota al cambiar */
+  .badge-pop { animation: badge-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  @keyframes badge-pop {
+    0% { transform: scale(0.4); }
+    60% { transform: scale(1.35); }
+    100% { transform: scale(1); }
+  }
+
+  /* ---------- Cinta de marcas infinita ---------- */
+  .marquee {
+    display: flex;
+    overflow: hidden;
+    mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  }
+  .marquee-track {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 3rem;
+    padding-right: 3rem;
+    animation: marquee var(--marquee-duration, 40s) linear infinite;
+  }
+  .marquee-reverse .marquee-track { animation-direction: reverse; }
+  .marquee:hover .marquee-track { animation-play-state: paused; }
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-100%); }
+  }
+
+  /* ---------- Polvo dorado flotante (fondos oscuros) ---------- */
+  .gold-dust {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .gold-dust::before,
+  .gold-dust::after {
+    content: "";
+    position: absolute;
+    inset: -50% 0 0 0;
+    background-image:
+      radial-gradient(1.5px 1.5px at 10% 20%, rgb(227 204 147 / 0.9), transparent),
+      radial-gradient(1px 1px at 30% 70%, rgb(227 204 147 / 0.7), transparent),
+      radial-gradient(2px 2px at 55% 35%, rgb(227 204 147 / 0.6), transparent),
+      radial-gradient(1px 1px at 75% 85%, rgb(255 241 200 / 0.8), transparent),
+      radial-gradient(1.5px 1.5px at 90% 15%, rgb(227 204 147 / 0.7), transparent),
+      radial-gradient(1px 1px at 45% 55%, rgb(255 241 200 / 0.6), transparent);
+    background-size: 340px 340px;
+    animation: dust-rise 26s linear infinite;
+    opacity: 0.55;
+  }
+  .gold-dust::after {
+    background-size: 520px 520px;
+    animation-duration: 40s;
+    opacity: 0.35;
+  }
+  @keyframes dust-rise {
+    from { transform: translateY(0); }
+    to { transform: translateY(33.333%); }
+  }
+
+  /* Resplandor que se mueve lentamente (fondos oscuros) */
+  .aurora {
+    position: absolute;
+    inset: -20%;
+    pointer-events: none;
+    background:
+      radial-gradient(40% 35% at 20% 30%, rgb(197 162 90 / 0.22), transparent 70%),
+      radial-gradient(35% 30% at 80% 70%, rgb(140 109 47 / 0.25), transparent 70%),
+      radial-gradient(30% 30% at 60% 10%, rgb(227 204 147 / 0.12), transparent 70%);
+    filter: blur(20px);
+    animation: aurora 18s ease-in-out infinite alternate;
+  }
+  @keyframes aurora {
+    0% { transform: translate3d(-4%, -2%, 0) rotate(0deg) scale(1); }
+    50% { transform: translate3d(3%, 3%, 0) rotate(8deg) scale(1.08); }
+    100% { transform: translate3d(5%, -3%, 0) rotate(-6deg) scale(1.02); }
+  }
+
+  /* ---------- Tarjeta de producto ---------- */
+  .product-card .card-media {
+    transition: box-shadow 0.6s cubic-bezier(0.22, 1, 0.36, 1), transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .product-card:hover .card-media {
+    transform: translateY(-6px);
+    box-shadow: 0 0 0 1px rgb(197 162 90 / 0.7), 0 28px 50px -24px rgb(10 10 10 / 0.45), 0 0 40px -10px rgb(197 162 90 / 0.45);
+  }
+  .product-card .card-shine {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(115deg, transparent 35%, rgb(255 246 220 / 0.55) 50%, transparent 65%);
+    transform: translateX(-130%);
+    transition: transform 1s cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+  }
+  .product-card:hover .card-shine { transform: translateX(130%); }
+  .product-card .card-cta {
+    transform: translateY(101%);
+    transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .product-card:hover .card-cta,
+  .product-card:focus-within .card-cta { transform: translateY(0); }
+
+  /* ---------- Tarjetas con foco de luz que sigue al mouse ---------- */
+  .spotlight {
+    position: relative;
+    isolation: isolate;
+  }
+  .spotlight::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), rgb(197 162 90 / 0.35), transparent 45%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+  .spotlight:hover::before { opacity: 1; }
+
+  /* Borde dorado que gira (tarjetas destacadas) */
+  .ring-spin {
+    position: relative;
+    isolation: isolate;
+  }
+  .ring-spin::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    z-index: -2;
+    background: conic-gradient(from var(--angle, 0deg), transparent 0deg, var(--color-gold) 60deg, transparent 120deg, transparent 360deg);
+    animation: ring-spin 5s linear infinite;
+  }
+  .ring-spin::after {
+    content: "";
+    position: absolute;
+    inset: 1px;
+    z-index: -1;
+    background: var(--ring-bg, var(--color-ink));
+  }
+  @property --angle {
+    syntax: "<angle>";
+    initial-value: 0deg;
+    inherits: false;
+  }
+  @keyframes ring-spin {
+    to { --angle: 360deg; }
+  }
+
+  /* Flotación suave */
+  .float-slow { animation: float-slow 6s ease-in-out infinite; }
+  @keyframes float-slow {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  /* Ícono con anillo punteado que gira */
+  .icon-orbit { position: relative; }
+  .icon-orbit::after {
+    content: "";
+    position: absolute;
+    inset: -6px;
+    border-radius: 9999px;
+    border: 1px dashed rgb(197 162 90 / 0.6);
+    animation: orbit 14s linear infinite;
+  }
+  @keyframes orbit {
+    to { transform: rotate(360deg); }
+  }
+
+  /* Barra de progreso de lectura */
+  .scroll-progress {
+    transform-origin: 0 50%;
+    transform: scaleX(var(--progress, 0));
+  }
+
+  /* Transición de entrada de cada página */
+  .page-enter { animation: page-enter 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  @keyframes page-enter {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  /* Texto contorneado gigante */
+  .text-outline {
+    color: transparent;
+    -webkit-text-stroke: 1px rgb(197 162 90 / 0.35);
+  }
+}

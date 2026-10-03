@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { ProductGrid } from "@/components/product/product-card";
 import { ShopFilters } from "@/components/shop/filters";
 import { ButtonLink } from "@/components/ui/button";
-import { Container, EmptyState, SectionHeading } from "@/components/ui/layout";
+import { Container, EmptyState, PageHeader } from "@/components/ui/layout";
 import { getCatalog, getCategories } from "@/lib/catalog";
 import { filterProducts, hasActiveFilters, parseShopParams } from "@/lib/shop-filters";
 
@@ -22,10 +22,14 @@ export default async function ShopPage({ searchParams }: PageProps<"/shop">) {
   const category = categories.find((c) => c.slug === params.category);
 
   return (
+    <>
+    <PageHeader
+      eyebrow="Tienda"
+      title={category?.name ?? "Todos los perfumes"}
+      description="Perfumes árabes, de diseñador y decants. Busca, filtra y encuentra tu fragancia."
+    />
     <Container className="py-12 sm:py-16">
-      <SectionHeading as="h1" eyebrow="Tienda" title={category?.name ?? "Todos los perfumes"} />
-
-      <div className="mt-10">
+      <div data-reveal>
         <ShopFilters params={params} categories={categories} activeCount={activeCount} />
       </div>
 
@@ -58,5 +62,6 @@ export default async function ShopPage({ searchParams }: PageProps<"/shop">) {
         )}
       </div>
     </Container>
+    </>
   );
 }

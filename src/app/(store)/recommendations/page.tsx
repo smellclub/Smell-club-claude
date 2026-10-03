@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ProductCard } from "@/components/product/product-card";
 import { ButtonLink } from "@/components/ui/button";
 import { WhatsAppIcon } from "@/components/ui/icons";
-import { Container, EmptyState, SectionHeading } from "@/components/ui/layout";
+import { Container, EmptyState, PageHeader, SectionHeading } from "@/components/ui/layout";
 import { getCatalog } from "@/lib/catalog";
 import { OLFACTORY_FAMILIES, labelOf } from "@/lib/constants";
 import { whatsappLink } from "@/lib/whatsapp";
@@ -33,13 +33,12 @@ export default async function RecommendationsPage() {
 
   return (
     <>
-      <Container className="py-12 sm:py-16">
-        <SectionHeading
-          as="h1"
-          eyebrow="Recomendaciones"
-          title="Elegidos por Smellclub"
-          description="Fragancias que recomendamos por su calidad, versatilidad o personalidad."
-        />
+      <PageHeader
+        eyebrow="Recomendaciones"
+        title="Elegidos por Smellclub"
+        description="Fragancias que recomendamos por su calidad, versatilidad o personalidad."
+      />
+      <Container className="py-4 sm:py-8">
 
         {recommended.length === 0 ? (
           <div className="mt-12">
@@ -53,7 +52,7 @@ export default async function RecommendationsPage() {
           <div className="mt-14 flex flex-col gap-16">
             {ordered.map(([family, items]) => (
               <section key={family} aria-labelledby={`fam-${family}`}>
-                <h2 id={`fam-${family}`} className="border-b border-line pb-3 font-display text-3xl">
+                <h2 id={`fam-${family}`} data-reveal="left" className="border-b border-line pb-3 font-display text-3xl">
                   {family === "otros" ? "Más recomendaciones" : labelOf(OLFACTORY_FAMILIES, family)}
                 </h2>
                 <div className="mt-8 grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
@@ -93,9 +92,11 @@ export default async function RecommendationsPage() {
         </section>
       )}
 
-      <section className="bg-ink py-16 text-center text-ivory">
+      <section className="relative isolate overflow-hidden bg-ink py-20 text-center text-ivory">
+        <div aria-hidden="true" className="aurora -z-10" />
+        <div aria-hidden="true" className="gold-dust -z-10" />
         <Container className="flex flex-col items-center">
-          <h2 className="font-display text-3xl sm:text-4xl">¿No sabes cuál elegir?</h2>
+          <h2 data-reveal className="font-display text-4xl sm:text-5xl">¿No sabes cuál elegir?</h2>
           <p className="mt-3 max-w-md text-sm text-ivory/65">
             Cuéntanos qué perfumes te gustan, para qué ocasión lo quieres y tu presupuesto. Te respondemos con opciones.
           </p>
@@ -104,7 +105,7 @@ export default async function RecommendationsPage() {
               href={wa}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-8 inline-flex min-h-12 items-center gap-2 bg-gold px-6 text-[0.72rem] font-medium tracking-[0.18em] text-ink uppercase hover:bg-gold-light"
+              className="btn-fx btn-glow mt-8 inline-flex min-h-12 items-center gap-2 bg-gold px-6 text-[0.72rem] font-medium tracking-[0.18em] text-ink uppercase hover:bg-gold-light"
             >
               <WhatsAppIcon size={18} /> Pedir recomendación
             </a>

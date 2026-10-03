@@ -37,7 +37,7 @@ export function ShopFilters({
             enterKeyHint="search"
           />
         </label>
-        <button type="submit" className="min-h-12 bg-ink px-5 text-[0.7rem] font-medium tracking-[0.18em] text-ivory uppercase hover:text-gold-light">
+        <button type="submit" className="btn-fx min-h-12 bg-ink px-5 text-[0.7rem] font-medium tracking-[0.18em] text-ivory uppercase transition-colors hover:text-gold-light">
           Buscar
         </button>
       </div>

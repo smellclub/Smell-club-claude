@@ -17,8 +17,13 @@ const one = (v: unknown) => (Array.isArray(v) ? v[0] : v);
 const optionalEnum = <T extends [string, ...string[]]>(options: T) =>
   z.preprocess(one, z.enum(options).optional().catch(undefined));
 
+// Un campo vacío del formulario ("min=") NO es 0: se ignora. Si no, el
+// formulario de búsqueda (que envía min= y max= vacíos) dejaba 0 resultados.
 const optionalPrice = z.preprocess(
-  one,
+  (v) => {
+    const x = one(v);
+    return typeof x === "string" && x.trim() === "" ? undefined : x;
+  },
   z.coerce.number().min(0).max(1_000_000).optional().catch(undefined),
 );
 

@@ -1,11 +1,13 @@
 import {
   BenefitsSection,
+  BrandsMarquee,
   CategoriesSection,
   DecantsBand,
   FinalCta,
   Hero,
   InstagramSection,
   ProductsSection,
+  StatsStrip,
   TestimonialsSection,
 } from "@/components/home/sections";
 import { siteConfig } from "@/config/site";
@@ -24,6 +26,7 @@ export default async function HomePage() {
   const newest = products.filter((p) => p.isNew).slice(0, 8);
   const decants = products.filter(hasDecants);
   const recommended = products.filter((p) => p.isRecommended).slice(0, 4);
+  const brands = [...new Set(products.map((p) => p.brand).filter(Boolean))].sort((a, b) => a.localeCompare(b, "es"));
 
   const orgJsonLd = {
     "@context": "https://schema.org",
@@ -38,6 +41,8 @@ export default async function HomePage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(orgJsonLd) }} />
       <Hero />
+      <BrandsMarquee brands={brands} />
+      <StatsStrip perfumes={products.length} brands={brands.length} decants={decants.length} />
       <ProductsSection
         eyebrow="Selección"
         title="Destacados"

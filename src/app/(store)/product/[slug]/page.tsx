@@ -129,12 +129,15 @@ export default async function ProductPage({ params }: PageProps<"/product/[slug]
         </nav>
 
         <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
-          <ProductGallery images={product.images} name={product.name} brand={product.brand} />
+          <div data-reveal="left">
+            <ProductGallery images={product.images} name={product.name} brand={product.brand} />
+          </div>
 
           <div className="flex flex-col gap-8 lg:sticky lg:top-28 lg:self-start">
-            <div className="flex flex-col gap-3">
+            <div data-reveal="right" className="flex flex-col gap-3">
               <p className="eyebrow text-gold-dark">{product.brand}</p>
-              <h1 className="font-display text-4xl leading-tight sm:text-5xl">{product.name}</h1>
+              <h1 className="font-display text-4xl leading-tight sm:text-6xl">{product.name}</h1>
+              <span className="gold-rule w-20" aria-hidden="true" />
               <div className="flex flex-wrap gap-2 text-xs text-muted">
                 {product.gender && <span className="border border-line px-2 py-1">{labelOf(GENDERS, product.gender)}</span>}
                 {product.family && <span className="border border-line px-2 py-1">{labelOf(OLFACTORY_FAMILIES, product.family)}</span>}
@@ -142,6 +145,7 @@ export default async function ProductPage({ params }: PageProps<"/product/[slug]
               </div>
             </div>
 
+            <div data-reveal="right" style={{ "--i": 1 } as React.CSSProperties}>
             <AddToCart
               productId={product.id}
               slug={product.slug}
@@ -151,16 +155,17 @@ export default async function ProductPage({ params }: PageProps<"/product/[slug]
               variants={product.variants}
               whatsappHref={wa}
             />
+            </div>
 
             {product.description && (
-              <div className="flex flex-col gap-3 border-t border-line pt-6">
+              <div data-reveal style={{ "--i": 2 } as React.CSSProperties} className="flex flex-col gap-3 border-t border-line pt-6">
                 <h2 className="eyebrow text-[0.62rem] text-muted">Descripción</h2>
                 <p className="text-sm leading-relaxed whitespace-pre-line text-ink/85">{product.description}</p>
               </div>
             )}
 
             {hasNotes && (
-              <div className="flex flex-col gap-4">
+              <div data-reveal style={{ "--i": 3 } as React.CSSProperties} className="flex flex-col gap-4">
                 <h2 className="eyebrow text-[0.62rem] text-muted">Pirámide olfativa</h2>
                 <dl className="flex flex-col gap-4">
                   <NotesBlock title="Notas de salida" notes={product.notes.top} />

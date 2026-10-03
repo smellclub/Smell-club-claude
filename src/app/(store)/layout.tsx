@@ -1,5 +1,6 @@
 import { CartProvider } from "@/components/cart/cart-provider";
 import { CartToast } from "@/components/cart/cart-toast";
+import { FxRuntime } from "@/components/fx/fx-runtime";
 import { Footer } from "@/components/layout/footer";
 import { Header } from "@/components/layout/header";
 import { WhatsAppFab } from "@/components/layout/whatsapp-fab";
@@ -23,6 +24,7 @@ export default function StoreLayout({ children }: { children: React.ReactNode })
       </main>
       <Footer />
       <CartToast />
+      <FxRuntime />
       {wa && <WhatsAppFab href={wa} />}
     </CartProvider>
   );

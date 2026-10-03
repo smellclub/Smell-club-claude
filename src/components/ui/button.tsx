@@ -6,11 +6,11 @@ type Variant = "primary" | "gold" | "outline" | "outline-light" | "ghost" | "dan
 type Size = "sm" | "md" | "lg";
 
 const base =
-  "inline-flex items-center justify-center gap-2 font-medium uppercase tracking-[0.18em] transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-50 select-none";
+  "btn-fx inline-flex items-center justify-center gap-2 font-medium uppercase tracking-[0.18em] transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-50 select-none";
 
 const variants: Record<Variant, string> = {
   primary: "bg-ink text-ivory hover:bg-ink-soft hover:text-gold-light",
-  gold: "bg-gold text-ink hover:bg-gold-light",
+  gold: "bg-gold text-ink hover:bg-gold-light hover:shadow-[0_12px_40px_-10px_rgba(197,162,90,0.8)]",
   outline: "border border-ink text-ink hover:bg-ink hover:text-ivory",
   "outline-light": "border border-ivory/40 text-ivory hover:border-gold hover:text-gold-light",
   ghost: "text-ink hover:text-gold-dark",

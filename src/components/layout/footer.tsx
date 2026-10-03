@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { siteConfig } from "@/config/site";
+import { Marquee } from "@/components/fx/marquee";
 import { Logo } from "@/components/layout/logo";
 import { InstagramIcon, MailIcon, WhatsAppIcon } from "@/components/ui/icons";
 import { publicEnv } from "@/lib/env";
@@ -10,9 +11,18 @@ export function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="bg-ink text-ivory">
+    <footer className="relative isolate overflow-hidden bg-ink text-ivory">
+      <div aria-hidden="true" className="gold-dust -z-10 opacity-60" />
+      <div className="border-b border-ink-line py-5">
+        <Marquee
+          items={["Perfumería árabe", "Perfumes de diseñador", "Decants 5 ml y 10 ml", "Atención por WhatsApp", siteConfig.tagline]}
+          duration={35}
+          reverse
+          itemClassName="eyebrow text-ivory/50"
+        />
+      </div>
       <div className="mx-auto grid max-w-7xl gap-12 px-5 py-16 sm:px-8 md:grid-cols-4">
-        <div className="md:col-span-2">
+        <div data-reveal className="md:col-span-2">
           <Logo />
           <p className="mt-4 max-w-sm text-sm leading-relaxed text-ivory/60">{siteConfig.description}</p>
           <div className="mt-6 flex gap-2">
@@ -34,7 +44,7 @@ export function Footer() {
           </div>
         </div>
 
-        <nav aria-label="Tienda">
+        <nav data-reveal style={{ "--i": 1 } as React.CSSProperties} aria-label="Tienda">
           <p className="eyebrow text-gold">Tienda</p>
           <ul className="mt-4 space-y-1 text-sm text-ivory/70">
             {[{ label: "Todos los perfumes", href: "/shop" }, ...siteConfig.nav].map((l) => (
@@ -47,7 +57,7 @@ export function Footer() {
           </ul>
         </nav>
 
-        <nav aria-label="Legal">
+        <nav data-reveal style={{ "--i": 2 } as React.CSSProperties} aria-label="Legal">
           <p className="eyebrow text-gold">Información</p>
           <ul className="mt-4 space-y-1 text-sm text-ivory/70">
             <li><Link href="/legal/envios-y-devoluciones" className="inline-block py-1.5 hover:text-gold-light">Envíos y devoluciones</Link></li>
@@ -57,6 +67,12 @@ export function Footer() {
           </ul>
         </nav>
       </div>
+      <p
+        aria-hidden="true"
+        className="text-outline pointer-events-none overflow-hidden px-5 text-center font-display text-[12.5vw] leading-[0.85] tracking-[0.04em] whitespace-nowrap select-none"
+      >
+        SMELLCLUB
+      </p>
       <div className="border-t border-ink-line">
         <div className="mx-auto flex max-w-7xl flex-col gap-2 px-5 py-6 text-xs text-ivory/40 sm:flex-row sm:justify-between sm:px-8">
           <p>© {year} {siteConfig.name}. Todos los derechos reservados.</p>

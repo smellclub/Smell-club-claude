@@ -51,7 +51,11 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang={publicEnv.locale.split("-")[0]} className={`${inter.variable} ${cormorant.variable}`}>
+    <html lang={publicEnv.locale.split("-")[0]} className={`${inter.variable} ${cormorant.variable}`} suppressHydrationWarning>
+      <head>
+        {/* Activa las animaciones de aparición solo si hay JavaScript */}
+        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
+      </head>
       <body className="min-h-dvh">{children}</body>
     </html>
   );
