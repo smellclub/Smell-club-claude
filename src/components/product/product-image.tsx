@@ -48,11 +48,12 @@ export function ProductImage({
     return <Image src={src} alt={alt} fill sizes={sizes} priority={priority} className={cn("object-cover", className)} />;
   }
 
-  // Fotos de producto (a menudo pequeñas y cuadradas): se muestran enteras,
-  // centradas y sin ampliarse de más, para que se vean nítidas.
+  // Las fotos del catálogo ya vienen normalizadas (frasco centrado sobre
+  // blanco, 4:5, con su margen); el inset chico solo cubre fotos subidas
+  // desde el panel que lleguen sin margen.
   return (
     <div className={cn("relative h-full w-full bg-white", className)}>
-      <div className="absolute inset-[10%]">
+      <div className="absolute inset-[3%]">
         <Image src={src} alt={alt} fill sizes={sizes} priority={priority} className="object-contain mix-blend-multiply" />
       </div>
     </div>

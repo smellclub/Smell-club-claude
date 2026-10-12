@@ -41,7 +41,7 @@ export const legacyImages: Record<string, string> = {
   "lovely-cherie": "/products/lovely-cherie.jpg",
   "club-de-nuit-elixir": "/products/club-de-nuit-elixir.jpg",
   "club-de-nuit-iconic": "/products/club-de-nuit-iconic.jpg",
-  "club-de-nuit-precieux": "/products/club-de-nuit-precieux.png",
+  "club-de-nuit-precieux": "/products/club-de-nuit-precieux.jpg",
   "club-de-nuit-imperiale": "/products/club-de-nuit-imperiale.jpg",
   "club-de-nuit-woman": "/products/club-de-nuit-woman.jpg",
   "club-de-nuit-maleka": "/products/club-de-nuit-maleka.jpg",
