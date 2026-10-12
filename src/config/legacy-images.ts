@@ -49,7 +49,6 @@ export const legacyImages: Record<string, string> = {
   "khamrah-dukhan": "/products/khamrah-dukhan.jpg",
   "sceptre-malachite": "/products/sceptre-malachite.jpg",
   "angham": "/products/angham.jpg",
-  "fakhar-black": "/products/fakhar-black.jpg",
   "fakhar-gold-extrait": "/products/fakhar-gold-extrait.jpg",
   "fakhar-rose": "/products/fakhar-rose.jpg",
   "salvo-intense": "/products/salvo-intense.jpg",
