@@ -68,7 +68,6 @@ with data (name, brand, slug, category_slug, gender, sort_order) as (
   ('Khamrah Dukhan', 'Lattafa', 'khamrah-dukhan', 'perfumes-arabes', 'unisex', 43),
   ('Sceptre Malachite', 'Maison Alhambra', 'sceptre-malachite', 'perfumes-arabes', 'unisex', 44),
   ('Angham', 'Lattafa', 'angham', 'perfumes-arabes', 'femenino', 45),
-  ('Fakhar Black', 'Lattafa', 'fakhar-black', 'perfumes-arabes', 'masculino', 46),
   ('Fakhar Gold Extrait', 'Lattafa', 'fakhar-gold-extrait', 'perfumes-arabes', 'unisex', 47),
   ('Fakhar Rose', 'Lattafa', 'fakhar-rose', 'perfumes-arabes', 'femenino', 48),
   ('Salvo Intense', 'Maison Alhambra', 'salvo-intense', 'perfumes-arabes', 'masculino', 49),
@@ -122,7 +121,7 @@ on conflict (slug) do update set
 
 -- Formatos y precios (los pedidos antiguos conservan su copia de precio)
 delete from public.product_variants
- where product_id in (select id from public.products where slug in ('vulcan-feu', 'khamrah', 'club-de-nuit-bling', 'emeer', '9pm-night-out', 'asad', 'fakhar', 'mandarin-elixir', 'eclaire', 'scandal-pour-homme', 'jpg-paradise-garden', 'odyssey-candee', 'odyssey-mandarin-sky', 'odyssey-homme', 'odyssey-mega', 'honor-and-glory', 'oud-for-glory', 'amethyst', 'club-de-nuit-intense', 'odyssey-spectra', 'odyssey-pink-pop', 'island-breeze', 'veneno-scarlet', 'chants', 'set-yara', 'afeef', 'mayar-cherry-intense', 'victoria', 'hawas-ice', 'hawas-for-him', 'pacific-blue', 'odyssey-bahamas', 'cocoa-morado', 'azzure-aoud', 'lovely-cherie', 'club-de-nuit-elixir', 'club-de-nuit-iconic', 'club-de-nuit-precieux', 'club-de-nuit-imperiale', 'club-de-nuit-woman', 'club-de-nuit-maleka', 'khamrah-qahwa', 'khamrah-dukhan', 'sceptre-malachite', 'angham', 'fakhar-black', 'fakhar-gold-extrait', 'fakhar-rose', 'salvo-intense', 'hayaati-black', 'qaed-al-fursan-unlimited', 'qaed-al-fursan', '9am-dive', 'musamam', 'vintage-radio', 'ansaam-gold', 'asad-zanzibar', 'asad-bourbon', 'the-kingdom', 'nebras', 'sehr', 'tiramisu-coco', 'yara-moi', 'yara-rosa', 'yara-candy', 'yara-tous', 'mayar-natural-intense', 'haya', 'sakeena', 'emaan', 'bharara', 'al-haramain-amber-oud', 'al-haramain-aqua-dubai', 'tharwah', 'odyssey-aqua', 'odyssey-limoni', 'odyssey-chocolat', 'liquid-brun', 'tag-her', 'atlas', 'island-bliss', 'yum-yum'));
+ where product_id in (select id from public.products where slug in ('vulcan-feu', 'khamrah', 'club-de-nuit-bling', 'emeer', '9pm-night-out', 'asad', 'fakhar', 'mandarin-elixir', 'eclaire', 'scandal-pour-homme', 'jpg-paradise-garden', 'odyssey-candee', 'odyssey-mandarin-sky', 'odyssey-homme', 'odyssey-mega', 'honor-and-glory', 'oud-for-glory', 'amethyst', 'club-de-nuit-intense', 'odyssey-spectra', 'odyssey-pink-pop', 'island-breeze', 'veneno-scarlet', 'chants', 'set-yara', 'afeef', 'mayar-cherry-intense', 'victoria', 'hawas-ice', 'hawas-for-him', 'pacific-blue', 'odyssey-bahamas', 'cocoa-morado', 'azzure-aoud', 'lovely-cherie', 'club-de-nuit-elixir', 'club-de-nuit-iconic', 'club-de-nuit-precieux', 'club-de-nuit-imperiale', 'club-de-nuit-woman', 'club-de-nuit-maleka', 'khamrah-qahwa', 'khamrah-dukhan', 'sceptre-malachite', 'angham', 'fakhar-gold-extrait', 'fakhar-rose', 'salvo-intense', 'hayaati-black', 'qaed-al-fursan-unlimited', 'qaed-al-fursan', '9am-dive', 'musamam', 'vintage-radio', 'ansaam-gold', 'asad-zanzibar', 'asad-bourbon', 'the-kingdom', 'nebras', 'sehr', 'tiramisu-coco', 'yara-moi', 'yara-rosa', 'yara-candy', 'yara-tous', 'mayar-natural-intense', 'haya', 'sakeena', 'emaan', 'bharara', 'al-haramain-amber-oud', 'al-haramain-aqua-dubai', 'tharwah', 'odyssey-aqua', 'odyssey-limoni', 'odyssey-chocolat', 'liquid-brun', 'tag-her', 'atlas', 'island-bliss', 'yum-yum'));
 
 insert into public.product_variants (product_id, kind, size_ml, label, price_cents, stock, sort_order)
 select p.id, v.kind, v.size_ml, v.label, v.price_cents, v.stock, v.sort_order
@@ -146,6 +145,7 @@ select p.id, v.kind, v.size_ml, v.label, v.price_cents, v.stock, v.sort_order
   ('asad', 'bottle', null, 'Frasco completo', 229900, 10, 3),
   ('fakhar', 'decant', 5, 'Decant 5 ml', 25000, 10, 1),
   ('fakhar', 'decant', 10, 'Decant 10 ml', 40000, 10, 2),
+  ('fakhar', 'bottle', null, 'Frasco completo', 229900, 10, 3),
   ('mandarin-elixir', 'decant', 5, 'Decant 5 ml', 25000, 10, 1),
   ('mandarin-elixir', 'decant', 10, 'Decant 10 ml', 40000, 10, 2),
   ('eclaire', 'decant', 5, 'Decant 5 ml', 25000, 10, 1),
@@ -189,7 +189,6 @@ select p.id, v.kind, v.size_ml, v.label, v.price_cents, v.stock, v.sort_order
   ('khamrah-dukhan', 'bottle', null, 'Frasco completo', 289900, 10, 1),
   ('sceptre-malachite', 'bottle', null, 'Frasco completo', 229900, 10, 1),
   ('angham', 'bottle', null, 'Frasco completo', 219900, 10, 1),
-  ('fakhar-black', 'bottle', null, 'Frasco completo', 229900, 10, 1),
   ('fakhar-gold-extrait', 'bottle', null, 'Frasco completo', 229900, 10, 1),
   ('fakhar-rose', 'bottle', null, 'Frasco completo', 229900, 10, 1),
   ('salvo-intense', 'bottle', null, 'Frasco completo', 209900, 10, 1),
@@ -233,7 +232,7 @@ update public.categories set description = null where description like '[PLACEHO
 
 commit;
 
--- Comprobación: debe mostrar 82 perfumes y 99 formatos
+-- Comprobación: debe mostrar 81 perfumes y 99 formatos
 select count(distinct p.id) as perfumes, count(v.id) as formatos
   from public.products p join public.product_variants v on v.product_id = p.id
- where p.slug in ('vulcan-feu', 'khamrah', 'club-de-nuit-bling', 'emeer', '9pm-night-out', 'asad', 'fakhar', 'mandarin-elixir', 'eclaire', 'scandal-pour-homme', 'jpg-paradise-garden', 'odyssey-candee', 'odyssey-mandarin-sky', 'odyssey-homme', 'odyssey-mega', 'honor-and-glory', 'oud-for-glory', 'amethyst', 'club-de-nuit-intense', 'odyssey-spectra', 'odyssey-pink-pop', 'island-breeze', 'veneno-scarlet', 'chants', 'set-yara', 'afeef', 'mayar-cherry-intense', 'victoria', 'hawas-ice', 'hawas-for-him', 'pacific-blue', 'odyssey-bahamas', 'cocoa-morado', 'azzure-aoud', 'lovely-cherie', 'club-de-nuit-elixir', 'club-de-nuit-iconic', 'club-de-nuit-precieux', 'club-de-nuit-imperiale', 'club-de-nuit-woman', 'club-de-nuit-maleka', 'khamrah-qahwa', 'khamrah-dukhan', 'sceptre-malachite', 'angham', 'fakhar-black', 'fakhar-gold-extrait', 'fakhar-rose', 'salvo-intense', 'hayaati-black', 'qaed-al-fursan-unlimited', 'qaed-al-fursan', '9am-dive', 'musamam', 'vintage-radio', 'ansaam-gold', 'asad-zanzibar', 'asad-bourbon', 'the-kingdom', 'nebras', 'sehr', 'tiramisu-coco', 'yara-moi', 'yara-rosa', 'yara-candy', 'yara-tous', 'mayar-natural-intense', 'haya', 'sakeena', 'emaan', 'bharara', 'al-haramain-amber-oud', 'al-haramain-aqua-dubai', 'tharwah', 'odyssey-aqua', 'odyssey-limoni', 'odyssey-chocolat', 'liquid-brun', 'tag-her', 'atlas', 'island-bliss', 'yum-yum');
+ where p.slug in ('vulcan-feu', 'khamrah', 'club-de-nuit-bling', 'emeer', '9pm-night-out', 'asad', 'fakhar', 'mandarin-elixir', 'eclaire', 'scandal-pour-homme', 'jpg-paradise-garden', 'odyssey-candee', 'odyssey-mandarin-sky', 'odyssey-homme', 'odyssey-mega', 'honor-and-glory', 'oud-for-glory', 'amethyst', 'club-de-nuit-intense', 'odyssey-spectra', 'odyssey-pink-pop', 'island-breeze', 'veneno-scarlet', 'chants', 'set-yara', 'afeef', 'mayar-cherry-intense', 'victoria', 'hawas-ice', 'hawas-for-him', 'pacific-blue', 'odyssey-bahamas', 'cocoa-morado', 'azzure-aoud', 'lovely-cherie', 'club-de-nuit-elixir', 'club-de-nuit-iconic', 'club-de-nuit-precieux', 'club-de-nuit-imperiale', 'club-de-nuit-woman', 'club-de-nuit-maleka', 'khamrah-qahwa', 'khamrah-dukhan', 'sceptre-malachite', 'angham', 'fakhar-gold-extrait', 'fakhar-rose', 'salvo-intense', 'hayaati-black', 'qaed-al-fursan-unlimited', 'qaed-al-fursan', '9am-dive', 'musamam', 'vintage-radio', 'ansaam-gold', 'asad-zanzibar', 'asad-bourbon', 'the-kingdom', 'nebras', 'sehr', 'tiramisu-coco', 'yara-moi', 'yara-rosa', 'yara-candy', 'yara-tous', 'mayar-natural-intense', 'haya', 'sakeena', 'emaan', 'bharara', 'al-haramain-amber-oud', 'al-haramain-aqua-dubai', 'tharwah', 'odyssey-aqua', 'odyssey-limoni', 'odyssey-chocolat', 'liquid-brun', 'tag-her', 'atlas', 'island-bliss', 'yum-yum');
