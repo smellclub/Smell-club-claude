@@ -28,7 +28,7 @@ export default async function DecantsPage({ searchParams }: PageProps<"/decants"
   const params = parseShopParams(await searchParams);
   const [products, categories] = await Promise.all([getCatalog(), getCategories()]);
   const withDecants = products.filter(hasDecants);
-  const results = filterProducts(withDecants, { ...params, decants: undefined });
+  const { products: results } = filterProducts(withDecants, { ...params, decants: undefined });
   const activeCount = ["category", "gender", "family", "min", "max", "available", "offers"].filter(
     (k) => params[k as keyof typeof params] !== undefined,
   ).length;
