@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 export default async function ShopPage({ searchParams }: PageProps<"/shop">) {
   const params = parseShopParams(await searchParams);
   const [products, categories] = await Promise.all([getCatalog(), getCategories()]);
-  const results = filterProducts(products, params);
+  const { products: results, approximate } = filterProducts(products, params);
   const activeCount = ["category", "gender", "family", "min", "max", "available", "decants", "offers"].filter(
     (k) => params[k as keyof typeof params] !== undefined,
   ).length;
@@ -35,8 +35,11 @@ export default async function ShopPage({ searchParams }: PageProps<"/shop">) {
 
       <p className="mt-8 text-sm text-muted" aria-live="polite">
         {results.length} {results.length === 1 ? "perfume" : "perfumes"}
-        {params.q ? ` para «${params.q}»` : ""}
+        {params.q ? (approximate ? ` parecidos a «${params.q}»` : ` para «${params.q}»`) : ""}
       </p>
+      {approximate && (
+        <p className="mt-1 text-sm text-muted">No encontramos exactamente lo que buscaste; estos son los más parecidos.</p>
+      )}
 
       <div className="mt-6">
         {results.length > 0 ? (

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { GENDERS, OLFACTORY_FAMILIES, values } from "@/lib/constants";
 import { hasDecants, isInStock, maxDiscount, minPriceCents } from "@/lib/product";
-import { normalizeForSearch } from "@/lib/utils";
+import { searchProducts } from "@/lib/search";
 import type { Product } from "@/types/domain";
 
 export const SORT_OPTIONS = [
@@ -48,18 +48,19 @@ export function parseShopParams(raw: Record<string, string | string[] | undefine
   return parsed.success ? parsed.data : {};
 }
 
-export function filterProducts(products: Product[], params: ShopParams): Product[] {
-  const q = params.q ? normalizeForSearch(params.q) : "";
+export type FilterResult = {
+  products: Product[];
+  /** La búsqueda no coincidió del todo: se muestran los perfumes más parecidos */
+  approximate: boolean;
+};
+
+export function filterProducts(products: Product[], params: ShopParams): FilterResult {
   const minCents = params.min !== undefined ? Math.round(params.min * 100) : undefined;
   const maxCents = params.max !== undefined ? Math.round(params.max * 100) : undefined;
 
-  const result = products.filter((p) => {
-    if (q) {
-      const haystack = normalizeForSearch(
-        [p.name, p.brand, p.category?.name ?? "", ...p.notes.top, ...p.notes.heart, ...p.notes.base].join(" "),
-      );
-      if (!q.split(/\s+/).every((term) => haystack.includes(term))) return false;
-    }
+  // Primero los filtros; la búsqueda después, sobre lo que quedó, para que
+  // "kamrah" + "Unisex" encuentre Khamrah y no perfumes de otro género.
+  const filtered = products.filter((p) => {
     if (params.category && p.category?.slug !== params.category) return false;
     if (params.gender && p.gender !== params.gender) return false;
     if (params.family && p.family !== params.family) return false;
@@ -75,9 +76,16 @@ export function filterProducts(products: Product[], params: ShopParams): Product
     return true;
   });
 
+  const search = params.q?.trim() ? searchProducts(filtered, params.q) : null;
+  const result = search ? search.products : filtered;
+  const approximate = search?.approximate ?? false;
+  return { products: sortProducts(result, params.sort, Boolean(search)), approximate };
+}
+
+function sortProducts(result: Product[], sort: ShopParams["sort"], byRelevance: boolean): Product[] {
   const byPrice = (p: Product, fallback: number) => minPriceCents(p) ?? fallback;
 
-  switch (params.sort) {
+  switch (sort) {
     case "newest":
       return result.sort((a, b) => Number(b.isNew) - Number(a.isNew) || b.createdAt.localeCompare(a.createdAt));
     case "price-asc":
@@ -87,6 +95,8 @@ export function filterProducts(products: Product[], params: ShopParams): Product
     case "name":
       return result.sort((a, b) => a.name.localeCompare(b.name, "es"));
     default:
+      // Con búsqueda, "Destacados" respeta el orden por relevancia
+      if (byRelevance) return result;
       return result.sort(
         (a, b) =>
           Number(b.isFeatured) - Number(a.isFeatured) ||
